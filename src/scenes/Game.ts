@@ -19,17 +19,11 @@ export default class Demo extends Phaser.Scene {
 
 
   private collectStar = (player: Phaser.Types.Physics.Arcade.GameObjectWithBody, star: Phaser.Types.Physics.Arcade.GameObjectWithBody) => {
-
     (star as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody).disableBody(true, true);
     this.score += 10;
     this.registry.get('scoreText').setText('Score: ' + this.score);
-    var x = ((player as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody).x < 400) ? Phaser.Math.Between(400, 800) : Phaser.Math.Between(0, 400);
-
-
-    const bomb = this.registry.get('bombs').create(x, 16, 'bomb');
-    bomb.setBounce(1);
-    bomb.setCollideWorldBounds(true);
-
+    var y = (player as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody).y;
+    this.registry.get('bombs').create(800, y, 'bomb');
   }
 
   preload() {
@@ -96,11 +90,7 @@ export default class Demo extends Phaser.Scene {
     const scoreText = this.add.text(16, 16, 'score: 0', { fontSize: '32px', color: '#000' });
     this.registry.set('scoreText', scoreText);
 
-    const speedables = [bombs,stars].filter(a => a != null);
-    speedables.forEach((childGroup) => {
-      childGroup.children.iterate(child =>
-        (child as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody).setVelocityX(-100))
-    });
+    this.registry.set('speedables', [bombs, stars]);
   }
   update() {
     const cursors = this.registry.get('cursors');
@@ -120,7 +110,8 @@ export default class Demo extends Phaser.Scene {
 
       player.anims.play('turn');
     }
-    const speedables = [this.registry.get('bombs'), this.registry.get('stars')].filter(a => a != null);
+
+    const speedables: Phaser.Physics.Arcade.Group[] = this.registry.get('speedables');
     speedables.forEach((childGroup) => {
       childGroup.children.iterate(child =>
         (child as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody).setVelocityX(-100))
