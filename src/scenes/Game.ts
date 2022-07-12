@@ -19,7 +19,7 @@ export default class Demo extends Phaser.Scene {
 
 
   private collectStar = (player: Phaser.Types.Physics.Arcade.GameObjectWithBody, star: Phaser.Types.Physics.Arcade.GameObjectWithBody) => {
-    (star as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody).disableBody(true, true);
+    (star as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody).destroy();
     this.score += 10;
     this.registry.get('scoreText').setText('Score: ' + this.score);
     var y = (player as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody).y;
@@ -68,29 +68,10 @@ export default class Demo extends Phaser.Scene {
     const cursors = this.input.keyboard.createCursorKeys();
     this.registry.set('cursors', cursors);
 
-
-    const stars = this.physics.add.group({
-      key: 'star',
-      repeat: 110,
-      setXY: { x: 12, y: 0, stepX: 70 }
-    });
-
-    stars.children.iterate(function (child) {
-      const typedChild = child as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
-      typedChild.setY(Phaser.Math.FloatBetween(0, 500));
-    });
-
-    this.physics.add.overlap(player, stars, this.collectStar, undefined, this);
-
-
-    const bombs = this.physics.add.group();
-    this.registry.set('bombs', bombs);
-    this.physics.add.collider(player, bombs, this.hitBomb, undefined, this);
+    this.createNewObstacles();
 
     const scoreText = this.add.text(16, 16, 'score: 0', { fontSize: '32px', color: '#000' });
     this.registry.set('scoreText', scoreText);
-
-    this.registry.set('speedables', [bombs, stars]);
   }
   update() {
     const cursors = this.registry.get('cursors');
@@ -112,9 +93,39 @@ export default class Demo extends Phaser.Scene {
     }
 
     const speedables: Phaser.Physics.Arcade.Group[] = this.registry.get('speedables');
-    speedables.forEach((childGroup) => {
-      childGroup.children.iterate(child =>
-        (child as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody).setVelocityX(-100))
+    
+    speedables.forEach((childGroup) => {    
+      childGroup.children.entries.forEach((child) => {
+        const typedChild = (child as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody);
+        if(typedChild.body.right <= 0){
+          childGroup.remove(typedChild, true, true);
+        } else{
+          typedChild.setVelocityX(-100);
+        }
+      });
+        
     });
+  }
+
+  createNewObstacles(){
+    const player = this.registry.get('player');
+    const stars = this.physics.add.group({
+      key: 'star',
+      repeat: 110,
+      setXY: { x: 12, y: 0, stepX: 70 }
+    });
+
+    stars.children.iterate(function (child) {
+      const typedChild = child as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
+      typedChild.setY(Phaser.Math.FloatBetween(0, 500));
+    });
+
+    this.physics.add.overlap(player, stars, this.collectStar, undefined, this);
+    this.registry.set('stars', stars);
+
+    const bombs = this.physics.add.group();
+    this.registry.set('bombs', bombs);
+    this.physics.add.collider(player, bombs, this.hitBomb, undefined, this);
+    this.registry.set('speedables', [bombs, stars]);
   }
 }
