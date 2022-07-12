@@ -79,9 +79,10 @@ export default class Demo extends Phaser.Scene {
     const cursors = this.input.keyboard.createCursorKeys();
     this.registry.set('cursors', cursors);
 
-    const curveSetter = this.physics.add.sprite(this.CANVAS?.width ? this.CANVAS?.width : 0 - this.PLAYER_WIDTH / 2,
+    const curveSetter = this.physics.add.sprite((this.CANVAS?.width ? this.CANVAS?.width : 0),
       this.CANVAS?.height ? this.CANVAS?.height / 2 : 0, 'dude');
-    curveSetter.setCollideWorldBounds(true);
+    curveSetter.body.checkCollision.up = curveSetter.body.checkCollision.down = true;
+
 
     this.registry.set("curveSetterNoise", getNoiseFunction(5));
     this.registry.set("curveSetter", curveSetter);
