@@ -121,7 +121,7 @@ export default class Demo extends Phaser.Scene {
       this.CANVAS?.height ? this.CANVAS?.height / 2 : 0, 'dude');
     curveSetter.body.checkCollision.up = curveSetter.body.checkCollision.down = true;
 
-    this.registry.set("curveSetterNoise", getNoiseFunction(5));
+    this.registry.set("curveSetterNoise", getNoiseFunction(10));
     this.registry.set("curveSetter", curveSetter);
 
 
@@ -181,8 +181,23 @@ export default class Demo extends Phaser.Scene {
     }
 
     // Randomly move the curveSetter by choosing a value uniformly between -1, 0, 1
-    const direction = Math.sign(10 * curveSetterNoise(this.ticks));
-    curveSetter.setVelocityY(direction * this.PLAYER_VELOCITY);
+    enum CurveSetterDirection {
+      Up = -1,
+      Down = 1,
+    }
+
+    const direction = curveSetterNoise(this.ticks) < 0 ? CurveSetterDirection.Down : CurveSetterDirection.Up;
+
+    if ((direction == CurveSetterDirection.Up &&
+      curveSetter.y > this.PLAYER_HEIGHT / 2) ||
+      (direction == CurveSetterDirection.Down &&
+        curveSetter.y < (this.CANVAS?.height ? this.CANVAS?.height : 0) - this.PLAYER_HEIGHT / 2)
+    ) {
+      curveSetter.setVelocityY(direction * this.PLAYER_VELOCITY);
+    } else {
+      curveSetter.setVelocityY(0);
+    }
+
 
     // update static obstacle positions
     const staticObstacles: Phaser.Physics.Arcade.Group = this.registry.get('staticObstacles');
