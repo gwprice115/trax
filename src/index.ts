@@ -7,3 +7,5 @@ new Phaser.Game(
     scene: [GameScene]
   })
 );
+
+
