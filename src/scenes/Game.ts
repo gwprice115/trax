@@ -19,7 +19,7 @@ export default class Demo extends Phaser.Scene {
 
 
   private collectStar = (player: Phaser.Types.Physics.Arcade.GameObjectWithBody, star: Phaser.Types.Physics.Arcade.GameObjectWithBody) => {
-    (star as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody).disableBody(true, true);
+    (star as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody).destroy();
     this.score += 10;
     this.registry.get('scoreText').setText('Score: ' + this.score);
     var y = (player as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody).y;
@@ -82,7 +82,6 @@ export default class Demo extends Phaser.Scene {
     const cursors = this.input.keyboard.createCursorKeys();
     this.registry.set('cursors', cursors);
 
-
     const stars = this.physics.add.group({
       key: 'star',
       repeat: 110,
@@ -130,8 +129,16 @@ export default class Demo extends Phaser.Scene {
 
     const staticObstacles: Phaser.Physics.Arcade.Group[] = this.registry.get('staticObstacles');
     staticObstacles.forEach((childGroup) => {
-      childGroup.children.iterate(child =>
-        (child as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody).setVelocityX(-100))
+      childGroup.children.entries.forEach((child) => {
+        const typedChild = (child as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody);
+        if(typedChild.body.right <= 0){
+          childGroup.remove(typedChild, true, true);
+        } else{
+          typedChild.setVelocityX(-100);
+        }
+      });
     });
+
+    
   }
 }
