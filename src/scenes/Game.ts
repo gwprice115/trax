@@ -1,4 +1,4 @@
-import Phaser from 'phaser';
+import Phaser, { GameObjects } from 'phaser';
 import { SCREEN_WIDTH } from '../config';
 import Tracking from '../dynamicObstacles/Tracking';
 import Chasing from '../dynamicObstacles/Chasing';
@@ -61,7 +61,10 @@ export default class Demo extends Phaser.Scene {
     // TODO when we get path coordinates: const pathY = map.getY((SCREEN_WIDTH - player.body.x) / 4);
 
     var y = (player as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody).y;
-    this.bears?.get(800, y, "bear", player).body.setSize(32, 48);
+
+    const bear = new Tracking(this, 800, y, "bear", player);
+    bear.body.setSize(32, 48);
+    this.bears?.add(bear, true);
   }
 
   private changeCostume = (player: Phaser.Types.Physics.Arcade.GameObjectWithBody, portal: Phaser.Types.Physics.Arcade.GameObjectWithBody) => {
@@ -137,6 +140,13 @@ export default class Demo extends Phaser.Scene {
       frameRate: 10,
       repeat: -1
     });
+
+    this.anims.create({
+      key: 'bear',
+      frames: this.anims.generateFrameNumbers('bear', { start: 30, end: 48 }),
+      frameRate: 15,
+      repeat: -1,
+    })
 
     const cursors = this.input.keyboard.createCursorKeys();
     this.registry.set('cursors', cursors);
