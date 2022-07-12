@@ -127,9 +127,8 @@ export default class Demo extends Phaser.Scene {
       player.anims.play('turn');
     }
 
-    const speedables: Phaser.Physics.Arcade.Group[] = this.registry.get('speedables');
-    
-    speedables.forEach((childGroup) => {    
+    const staticObstacles: Phaser.Physics.Arcade.Group[] = this.registry.get('staticObstacles');
+    staticObstacles.forEach((childGroup) => {
       childGroup.children.entries.forEach((child) => {
         const typedChild = (child as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody);
         if(typedChild.body.right <= 0){
@@ -139,5 +138,7 @@ export default class Demo extends Phaser.Scene {
         }
       });
     });
+
+    
   }
 }
