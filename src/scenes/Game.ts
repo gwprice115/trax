@@ -27,6 +27,33 @@ export default class Demo extends Phaser.Scene {
     bears.create(800, y, 'bear', 0).body.setSize(32, 48);
   }
 
+  private chasing = (obstacle: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody, gameVelocity: number) => {
+    obstacle.setVelocityX(gameVelocity * 4);
+  }
+  
+  private diagonalRolling = (obstacle: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody, gameVelocity: number) => {
+    obstacle.setVelocityX(gameVelocity*3);
+    obstacle.setVelocityY(Math.random() * 200 + 50)
+  }
+
+  private tracking = (obstacle: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody, player: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody, gameVelocity: number) => {
+    const playerX = player.x
+    const playerY = player.y
+
+    const obstacleX = obstacle.x
+    const obstacleY = obstacle.y
+
+    const rotationAngle = Phaser.Math.Angle.Between(playerX, playerY, obstacleX, obstacleY)
+    obstacle.setRotation(rotationAngle);
+    obstacle.setVelocityX(gameVelocity * 2)
+
+    if (obstacleX > playerX + 300) {
+      obstacle.setVelocityY(Math.sin(rotationAngle) * gameVelocity * 2)
+    } else {
+      obstacle.setVelocityY(Math.sin(rotationAngle) * gameVelocity * 0.5)
+    }
+  }
+
   preload() {
     this.load.image('sky', 'http://labs.phaser.io/assets/skies/sky4.png');
     this.load.image('ground', 'http://labs.phaser.io/assets/sprites/platform.png');
@@ -37,6 +64,7 @@ export default class Demo extends Phaser.Scene {
       { frameWidth: 32, frameHeight: 48 }
     );
   }
+
 
   create() {
     this.add.image(400, 300, 'sky');
@@ -89,9 +117,10 @@ export default class Demo extends Phaser.Scene {
       setXY: { x: 12, y: 0, stepX: 70 }
     });
 
-    stars.children.iterate(function (child) {
+    stars.children.iterate(child => {
       const typedChild = child as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
-      typedChild.setY(Phaser.Math.FloatBetween(0, 500));
+      typedChild.setY(Phaser.Math.FloatBetween(0, 200));
+      this.diagonalRolling(typedChild, -100);
     });
 
     this.physics.add.overlap(player, stars, this.collectStar, undefined, this);
@@ -104,13 +133,19 @@ export default class Demo extends Phaser.Scene {
     const scoreText = this.add.text(16, 16, 'score: 0', { fontSize: '32px', color: '#000' });
     this.registry.set('scoreText', scoreText);
 
-    this.registry.set('staticObstacles', [bears, stars]);
+    this.registry.set('staticObstacles', [stars]);
   }
+
   update() {
     const cursors = this.registry.get('cursors');
     const player = this.registry.get('player');
+    const gameVelocity = -100;
+
     const bears: Phaser.Physics.Arcade.Group = this.registry.get('bears');
     bears.children.iterate(bear => (bear as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody).anims.play('bear', true));
+    // bears.children.iterate(bear => this.chasing(bear as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody, gameVelocity))
+
+    bears.children.iterate(bear => this.tracking(bear as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody, player, gameVelocity))
 
     if (cursors.up.isDown) {
       player.setVelocityY(-160);
@@ -131,7 +166,8 @@ export default class Demo extends Phaser.Scene {
     const staticObstacles: Phaser.Physics.Arcade.Group[] = this.registry.get('staticObstacles');
     staticObstacles.forEach((childGroup) => {
       childGroup.children.iterate(child =>
-        (child as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody).setVelocityX(-100))
+        (child as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody).setVelocityX(gameVelocity))
     });
   }
 }
+
