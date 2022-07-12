@@ -1,10 +1,20 @@
 import Phaser from 'phaser';
-
+import { getNoiseFunction } from '../utils/utils';
 
 
 export default class Demo extends Phaser.Scene {
+  private CANVAS?: HTMLCanvasElement;
+  private PLAYER_WIDTH: number;
+  private PLAYER_HEIGHT: number;
+  private PLAYER_VELOCITY: number;
+  private ticks: number;
+
   constructor() {
     super('GameScene');
+    this.PLAYER_WIDTH = 32;
+    this.PLAYER_HEIGHT = 48;
+    this.PLAYER_VELOCITY = 160;
+    this.ticks = 0;
   }
 
   private score = 0;
@@ -27,6 +37,7 @@ export default class Demo extends Phaser.Scene {
   }
 
   preload() {
+    this.CANVAS = this.sys.game.canvas;
     this.load.setBaseURL('http://labs.phaser.io');
     this.load.image('sky', 'assets/skies/sky4.png');
     this.load.image('ground', 'assets/sprites/platform.png');
@@ -34,7 +45,7 @@ export default class Demo extends Phaser.Scene {
     this.load.image('bomb', 'assets/sprites/apple.png');
     this.load.spritesheet('dude',
       'assets/sprites/dude.png',
-      { frameWidth: 32, frameHeight: 48 }
+      { frameWidth: this.PLAYER_WIDTH, frameHeight: this.PLAYER_HEIGHT }
     );
   }
 
@@ -68,6 +79,12 @@ export default class Demo extends Phaser.Scene {
     const cursors = this.input.keyboard.createCursorKeys();
     this.registry.set('cursors', cursors);
 
+    const curveSetter = this.physics.add.sprite(this.CANVAS?.width ? this.CANVAS?.width : 0 - this.PLAYER_WIDTH / 2,
+      this.CANVAS?.height ? this.CANVAS?.height / 2 : 0, 'dude');
+    curveSetter.setCollideWorldBounds(true);
+
+    this.registry.set("curveSetterNoise", getNoiseFunction(5));
+    this.registry.set("curveSetter", curveSetter);
 
     const stars = this.physics.add.group({
       key: 'star',
@@ -93,15 +110,19 @@ export default class Demo extends Phaser.Scene {
     this.registry.set('speedables', [bombs, stars]);
   }
   update() {
+    this.ticks++;
     const cursors = this.registry.get('cursors');
     const player = this.registry.get('player');
+    const curveSetter = this.registry.get('curveSetter');
+    const curveSetterNoise = this.registry.get('curveSetterNoise');
+
     if (cursors.up.isDown) {
-      player.setVelocityY(-160);
+      player.setVelocityY(-1 * this.PLAYER_VELOCITY);
 
       player.anims.play('left', true);
     }
     else if (cursors.down.isDown) {
-      player.setVelocityY(160);
+      player.setVelocityY(this.PLAYER_VELOCITY);
 
       player.anims.play('right', true);
     }
@@ -110,6 +131,10 @@ export default class Demo extends Phaser.Scene {
 
       player.anims.play('turn');
     }
+
+    // Randomly move the curveSetter by choosing a value uniformly between -1, 0, 1
+    const direction = Math.sign(10 * curveSetterNoise(this.ticks));
+    curveSetter.setVelocityY(direction * this.PLAYER_VELOCITY);
 
     const speedables: Phaser.Physics.Arcade.Group[] = this.registry.get('speedables');
     speedables.forEach((childGroup) => {
