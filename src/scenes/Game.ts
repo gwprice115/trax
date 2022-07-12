@@ -1,11 +1,18 @@
 import Phaser from 'phaser';
+import { SCREEN_WIDTH } from '../config';
+import Tracking from '../dynamicObstacles/Tracking';
+import Chasing from '../dynamicObstacles/Chasing';
+import Falling from '../dynamicObstacles/Falling';
 
-
+export const GAME_VELOCITY = -100;
 
 export default class Demo extends Phaser.Scene {
   constructor() {
     super('GameScene');
   }
+
+  private bears?: Phaser.Physics.Arcade.Group;
+  private stars?: Phaser.Physics.Arcade.Group;
 
   private score = 0;
 
@@ -22,36 +29,11 @@ export default class Demo extends Phaser.Scene {
     (star as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody).disableBody(true, true);
     this.score += 10;
     this.registry.get('scoreText').setText('Score: ' + this.score);
+
+    // TODO when we get path coordinates: const pathY = map.getY((SCREEN_WIDTH - player.body.x) / 4);
+
     var y = (player as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody).y;
-    const bears: Phaser.Physics.Arcade.Group = this.registry.get('bears');
-    bears.create(800, y, 'bear', 0).body.setSize(32, 48);
-  }
-
-  private chasing = (obstacle: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody, gameVelocity: number) => {
-    obstacle.setVelocityX(gameVelocity * 4);
-  }
-  
-  private diagonalRolling = (obstacle: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody, gameVelocity: number) => {
-    obstacle.setVelocityX(gameVelocity*3);
-    obstacle.setVelocityY(Math.random() * 200 + 50)
-  }
-
-  private tracking = (obstacle: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody, player: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody, gameVelocity: number) => {
-    const playerX = player.x
-    const playerY = player.y
-
-    const obstacleX = obstacle.x
-    const obstacleY = obstacle.y
-
-    const rotationAngle = Phaser.Math.Angle.Between(playerX, playerY, obstacleX, obstacleY)
-    obstacle.setRotation(rotationAngle);
-    obstacle.setVelocityX(gameVelocity * 2)
-
-    if (obstacleX > playerX + 300) {
-      obstacle.setVelocityY(Math.sin(rotationAngle) * gameVelocity * 2)
-    } else {
-      obstacle.setVelocityY(Math.sin(rotationAngle) * gameVelocity * 0.5)
-    }
+    this.bears?.get(800, y, "bear", player).body.setSize(32, 48);
   }
 
   preload() {
@@ -110,64 +92,45 @@ export default class Demo extends Phaser.Scene {
     const cursors = this.input.keyboard.createCursorKeys();
     this.registry.set('cursors', cursors);
 
+    this.bears = this.physics.add.group({
+			classType: Tracking,
+			runChildUpdate: true
+		})
+    this.physics.add.collider(player, this.bears, this.hitBear, undefined, this);
 
-    const stars = this.physics.add.group({
+    this.stars = this.physics.add.group({
+      classType: Falling,
       key: 'star',
       repeat: 110,
-      setXY: { x: 12, y: 0, stepX: 70 }
-    });
-
-    stars.children.iterate(child => {
+      setXY: { x: 12, y: 0, stepX: 70 },
+      runChildUpdate: true
+    })
+    this.stars.children.iterate(child => {
       const typedChild = child as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
       typedChild.setY(Phaser.Math.FloatBetween(0, 200));
-      this.diagonalRolling(typedChild, -100);
     });
-
-    this.physics.add.overlap(player, stars, this.collectStar, undefined, this);
-
-
-    const bears = this.physics.add.group();
-    this.registry.set('bears', bears);
-    this.physics.add.collider(player, bears, this.hitBear, undefined, this);
+    this.physics.add.overlap(player, this.stars, this.collectStar, undefined, this);
 
     const scoreText = this.add.text(16, 16, 'score: 0', { fontSize: '32px', color: '#000' });
     this.registry.set('scoreText', scoreText);
-
-    this.registry.set('staticObstacles', [stars]);
   }
 
   update() {
     const cursors = this.registry.get('cursors');
     const player = this.registry.get('player');
-    const gameVelocity = -100;
-
-    const bears: Phaser.Physics.Arcade.Group = this.registry.get('bears');
-    bears.children.iterate(bear => (bear as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody).anims.play('bear', true));
-    // bears.children.iterate(bear => this.chasing(bear as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody, gameVelocity))
-
-    bears.children.iterate(bear => this.tracking(bear as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody, player, gameVelocity))
 
     if (cursors.up.isDown) {
       player.setVelocityY(-160);
-
       player.anims.play('left', true);
     }
     else if (cursors.down.isDown) {
       player.setVelocityY(160);
-
       player.anims.play('right', true);
     }
     else {
       player.setVelocityY(0);
-
       player.anims.play('turn');
     }
-
-    const staticObstacles: Phaser.Physics.Arcade.Group[] = this.registry.get('staticObstacles');
-    staticObstacles.forEach((childGroup) => {
-      childGroup.children.iterate(child =>
-        (child as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody).setVelocityX(gameVelocity))
-    });
   }
 }
 
