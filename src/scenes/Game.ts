@@ -1,8 +1,20 @@
 import Phaser from 'phaser';
+import { getNoiseFunction } from '../utils/utils';
+
 
 export default class Demo extends Phaser.Scene {
+  private CANVAS?: HTMLCanvasElement;
+  private PLAYER_WIDTH: number;
+  private PLAYER_HEIGHT: number;
+  private PLAYER_VELOCITY: number;
+  private ticks: number;
+
   constructor() {
     super('GameScene');
+    this.PLAYER_WIDTH = 32;
+    this.PLAYER_HEIGHT = 48;
+    this.PLAYER_VELOCITY = 160;
+    this.ticks = 0;
   }
 
   private score = 0;
@@ -27,13 +39,14 @@ export default class Demo extends Phaser.Scene {
 
   private changeCostume = (player: Phaser.Types.Physics.Arcade.GameObjectWithBody, portal: Phaser.Types.Physics.Arcade.GameObjectWithBody) => {
     (portal as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody).disableBody(true, true);
-    switch(this.costume) {
+    switch (this.costume) {
       case 'dude':
         this.costume = 'recolored';
     }
   }
 
   preload() {
+    this.CANVAS = this.game.canvas;
     this.load.image('sky', 'http://labs.phaser.io/assets/skies/sky4.png');
     this.load.image('ground', 'http://labs.phaser.io/assets/sprites/platform.png');
     this.load.image('star', 'http://labs.phaser.io/assets/demoscene/star.png');
@@ -42,7 +55,7 @@ export default class Demo extends Phaser.Scene {
     this.load.spritesheet('recolored', 'assets/dude_recolored.png', { frameWidth: 32, frameHeight: 48 });
     this.load.spritesheet('dude',
       'http://labs.phaser.io/assets/sprites/dude.png',
-      { frameWidth: 32, frameHeight: 48 }
+      { frameWidth: this.PLAYER_WIDTH, frameHeight: this.PLAYER_HEIGHT }
     );
   }
 
@@ -107,6 +120,13 @@ export default class Demo extends Phaser.Scene {
     const cursors = this.input.keyboard.createCursorKeys();
     this.registry.set('cursors', cursors);
 
+    const curveSetter = this.physics.add.sprite((this.CANVAS?.width ? this.CANVAS?.width : 0),
+      this.CANVAS?.height ? this.CANVAS?.height / 2 : 0, 'dude');
+    curveSetter.body.checkCollision.up = curveSetter.body.checkCollision.down = true;
+
+    this.registry.set("curveSetterNoise", getNoiseFunction(5));
+    this.registry.set("curveSetter", curveSetter);
+
     // load stars and set collider
     const stars = this.physics.add.group({
       key: 'star',
@@ -148,8 +168,11 @@ export default class Demo extends Phaser.Scene {
     this.registry.set('staticObstacles', [bears, stars, portals]);
   }
   update() {
+    this.ticks++;
     const cursors = this.registry.get('cursors');
     const player = this.registry.get('player');
+    const curveSetter = this.registry.get('curveSetter');
+    const curveSetterNoise = this.registry.get('curveSetterNoise');
     const bears: Phaser.Physics.Arcade.Group = this.registry.get('bears');
     bears.children.iterate(bear => (bear as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody).anims.play('bear', true));
 
@@ -167,19 +190,23 @@ export default class Demo extends Phaser.Scene {
       player.anims.play(this.costume + '_turn');
     }
 
+    // Randomly move the curveSetter by choosing a value uniformly between -1, 0, 1
+    const direction = Math.sign(10 * curveSetterNoise(this.ticks));
+    curveSetter.setVelocityY(direction * this.PLAYER_VELOCITY);
+
     // update static obstacle positions
     const staticObstacles: Phaser.Physics.Arcade.Group[] = this.registry.get('staticObstacles');
     staticObstacles.forEach((childGroup) => {
       childGroup.children.entries.forEach((child) => {
         const typedChild = (child as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody);
-        if(typedChild.body.right <= 0){
+        if (typedChild.body.right <= 0) {
           childGroup.remove(typedChild, true, true);
-        } else{
+        } else {
           typedChild.setVelocityX(-100);
         }
       });
     });
 
-    
+
   }
 }
