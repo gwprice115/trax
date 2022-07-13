@@ -6,6 +6,7 @@ import Falling from '../dynamicObstacles/Falling';
 
 export const GAME_VELOCITY = -100;
 import { getNoiseFunction } from '../utils/utils';
+import Player from '../Player';
 
 
 const TREE = 'tree';
@@ -34,7 +35,9 @@ export default class Demo extends Phaser.Scene {
   private PLAYER_HEIGHT: number;
   private PLAYER_VELOCITY: number;
   private ticks: number;
-  private gameOver: boolean = false;
+  public gameOver: boolean = false;
+  private player: Player | undefined;
+  public cursors: Phaser.Types.Input.Keyboard.CursorKeys | undefined;
 
   constructor() {
     super('GameScene');
@@ -91,7 +94,7 @@ export default class Demo extends Phaser.Scene {
     this.load.image(PORTAL, 'http://labs.phaser.io/assets/sprites/mushroom.png')
     this.load.image(TREE, 'http://labs.phaser.io/assets/sprites/tree-european.png');
     this.load.image(ROCK, 'http://labs.phaser.io/assets/sprites/shinyball.png');
-    this.load.spritesheet(SKIER, 'assets/skier.png',{ frameWidth: this.PLAYER_WIDTH, frameHeight: this.PLAYER_HEIGHT });
+    this.load.spritesheet(SKIER, 'assets/skier.png', { frameWidth: this.PLAYER_WIDTH, frameHeight: this.PLAYER_HEIGHT });
     this.load.image(CARTMAN, 'http://labs.phaser.io/assets/svg/cartman.svg');
     this.load.spritesheet('bear', 'assets/bear.png', { frameWidth: 200, frameHeight: 200 });
   }
@@ -99,10 +102,7 @@ export default class Demo extends Phaser.Scene {
 
   create() {
     this.add.image(400, 300, 'sky');
-
-    const player = this.physics.add.sprite(100, 450, SKIER).setSize(70, 10).setOffset(5, 55);
-    player.setCollideWorldBounds(true);
-    this.registry.set('player', player);
+    this.player = new Player(this, 100, 450, SKIER);
 
     // set up static and dynamic obstacle groups
     this.staticObstacles = this.physics.add.group({
@@ -113,8 +113,8 @@ export default class Demo extends Phaser.Scene {
     })
 
     // hook up collisions
-    this.physics.add.overlap(player, this.staticObstacles, this.hitObstacle, undefined, this);
-    this.physics.add.overlap(player, this.dynamicObstacles, this.hitObstacle, undefined, this);
+    this.physics.add.overlap(this.player, this.staticObstacles, this.hitObstacle, undefined, this);
+    this.physics.add.overlap(this.player, this.dynamicObstacles, this.hitObstacle, undefined, this);
 
     // define animations for dude
     this.anims.create({
@@ -130,8 +130,7 @@ export default class Demo extends Phaser.Scene {
       repeat: -1,
     })
 
-    const cursors = this.input.keyboard.createCursorKeys();
-    this.registry.set('cursors', cursors);
+    this.cursors = this.input.keyboard.createCursorKeys();
 
     const curveSetter = this.physics.add.sprite((this.CANVAS?.width ? this.CANVAS?.width : 0),
       this.CANVAS?.height ? this.CANVAS?.height / 2 : 0, SKIER);
@@ -146,7 +145,8 @@ export default class Demo extends Phaser.Scene {
     this.registry.set('scoreText', scoreText);
 
     setInterval(() => {
-      if (!this.gameOver && this.staticObstacles != null) {
+      const { staticObstacles } = this;
+      if (!this.gameOver && staticObstacles != null) {
         let weightSum = 0;
         let assetPlaced = false;
         const randomValue = Math.random();
@@ -157,7 +157,7 @@ export default class Demo extends Phaser.Scene {
             while (yPosition > curveSetter.y - 100 && yPosition < curveSetter.y + 100) {
               yPosition = Math.random() * (this.CANVAS?.height ?? 0);
             }
-            const newObstacle = this.staticObstacles?.create(800, yPosition, assetKey, 0);
+            const newObstacle = staticObstacles.create(800, yPosition, assetKey, 0);
             newObstacle.displayHeight = 40;
             newObstacle.scaleX = newObstacle.scaleY;
           } else {
@@ -170,12 +170,12 @@ export default class Demo extends Phaser.Scene {
     }, 50);
 
     setInterval(() => {
-      if (!this.gameOver && this.dynamicObstacles != null) {
+      const { player } = this;
+      if (!this.gameOver && this.dynamicObstacles != null && player != null) {
         let weightSum = 0;
         let assetPlaced = false;
         const randomValue = Math.random();
         Object.keys(DYNAMIC_PROBABILITY_WEIGHTS).forEach(assetKey => {
-          console.log(assetKey);
           if (!assetPlaced && randomValue <= weightSum + DYNAMIC_PROBABILITY_WEIGHTS[assetKey]) {
             assetPlaced = true;
             switch (assetKey) {
@@ -185,7 +185,7 @@ export default class Demo extends Phaser.Scene {
                 this.dynamicObstacles?.add(bear, true);
                 break;
               case STAR:
-                const star = new Falling(this, SCREEN_WIDTH * (Math.random()+1)/2, 0, STAR)
+                const star = new Falling(this, SCREEN_WIDTH * (Math.random() + 1) / 2, 0, STAR)
                 this.dynamicObstacles?.add(star, true);
               case CARTMAN:
                 const cartman = new Chasing(this, SCREEN_WIDTH, Math.random() * SCREEN_HEIGHT, CARTMAN)
@@ -209,30 +209,10 @@ export default class Demo extends Phaser.Scene {
       const score = Math.floor(this.ticks / 10);
       this.registry.get('scoreText').setText('Score: ' + score);
     }
-    const cursors = this.registry.get('cursors');
-    const player = this.registry.get('player');
     const curveSetter = this.registry.get('curveSetter');
     const curveSetterNoise = this.registry.get('curveSetterNoise');
 
-    if (!this.gameOver) {
-      player.anims.play(SKIER, true);
-
-      if (cursors.up.isDown) {
-        player.setVelocityY(-160);
-        player.angle = -30;
-        player.setOffset(10, 35);
-      }
-      else if (cursors.down.isDown) {
-        player.setVelocityY(160);
-        player.angle = 30;
-        player.setOffset(-12, 65);
-      }
-      else {
-        player.setVelocityY(0);
-        player.angle = 0;
-        player.setOffset(5, 55);
-      }
-    }
+    this.player?.update();
     // Randomly move the curveSetter by choosing a value uniformly between -1, 0, 1
     const direction = Math.sign(10 * curveSetterNoise(this.ticks));
     curveSetter.setVelocityY(direction * this.PLAYER_VELOCITY);
