@@ -1,44 +1,15 @@
 import Phaser from 'phaser';
-import { SCREEN_HEIGHT, SCREEN_WIDTH } from '../config';
-import Tracking from '../dynamicObstacles/Tracking';
-import Chasing from '../dynamicObstacles/Chasing';
-import Falling from '../dynamicObstacles/Falling';
 
 export const GAME_VELOCITY = -100;
-import { getNoiseFunction } from '../utils/utils';
+import { CARTMAN, PORTAL, ROCK, SKIER, Spawner, STAR, TREE } from '../Spawner';
 import Player from '../Player';
 
-
-const TREE = 'tree';
-const ROCK = 'rock';
-const PORTAL = 'portal';
-const STAR = 'star';
-const SKIER = 'skier';
-const BEAR = 'bear';
-const CARTMAN = 'cartman';
-
-
-const PLAYER_WIDTH = 74;
-const PLAYER_HEIGHT = 68;
-const PLAYER_VELOCITY = 160;
-
-const STATIC_PROBABILITY_WEIGHTS = normalizeWeights({
-  [ROCK]: 1,
-  [TREE]: 1,
-  [PORTAL]: 0,
-});
-
-const DYNAMIC_PROBABILITY_WEIGHTS = normalizeWeights({
-  [STAR]: 2,
-  [BEAR]: 1,
-  [CARTMAN]: 0.5,
-});
-
 export default class Demo extends Phaser.Scene {
-  private CANVAS?: HTMLCanvasElement;
+  public canvas: { height: number; width: number } = { height: 0, width: 0 };
   private ticks: number = 0;
   public gameOver: boolean = false;
-  private player: Player | undefined;
+  public player: Player | undefined;
+  private spawner: Spawner | undefined;
   public cursors: Phaser.Types.Input.Keyboard.CursorKeys | undefined;
 
   constructor() {
@@ -49,8 +20,8 @@ export default class Demo extends Phaser.Scene {
   private bears: Phaser.Physics.Arcade.Group | undefined;
   private stars: Phaser.Physics.Arcade.Group | undefined;
 
-  private staticObstacles?: Phaser.Physics.Arcade.Group;
-  private dynamicObstacles?: Phaser.Physics.Arcade.Group;
+  public staticObstacles?: Phaser.Physics.Arcade.Group;
+  public dynamicObstacles?: Phaser.Physics.Arcade.Group;
 
   private score = 0;
 
@@ -72,14 +43,14 @@ export default class Demo extends Phaser.Scene {
   }
 
   preload() {
-    this.CANVAS = this.game.canvas;
+    this.canvas = this.game.canvas;
     this.load.image('sky', 'http://labs.phaser.io/assets/skies/sky4.png');
     this.load.image('ground', 'http://labs.phaser.io/assets/sprites/platform.png');
     this.load.image(STAR, 'http://labs.phaser.io/assets/demoscene/star.png');
     this.load.image(PORTAL, 'http://labs.phaser.io/assets/sprites/mushroom.png')
     this.load.image(TREE, 'http://labs.phaser.io/assets/sprites/tree-european.png');
     this.load.image(ROCK, 'http://labs.phaser.io/assets/sprites/shinyball.png');
-    this.load.spritesheet(SKIER, 'assets/skier.png', { frameWidth: PLAYER_WIDTH, frameHeight: PLAYER_HEIGHT });
+    this.load.spritesheet(SKIER, 'assets/skier.png', { frameWidth: Player.WIDTH, frameHeight: Player.HEIGHT });
     this.load.image(CARTMAN, 'http://labs.phaser.io/assets/svg/cartman.svg');
     this.load.spritesheet('bear', 'assets/bear.png', { frameWidth: 200, frameHeight: 200 });
   }
@@ -88,6 +59,7 @@ export default class Demo extends Phaser.Scene {
   create() {
     this.add.image(400, 300, 'sky');
     this.player = new Player(this, 100, 450, SKIER);
+    this.spawner = new Spawner(this);
 
     // set up static and dynamic obstacle groups
     this.staticObstacles = this.physics.add.group({
@@ -117,75 +89,9 @@ export default class Demo extends Phaser.Scene {
 
     this.cursors = this.input.keyboard.createCursorKeys();
 
-    const curveSetter = this.physics.add.sprite((this.CANVAS?.width ? this.CANVAS?.width : 0),
-      this.CANVAS?.height ? this.CANVAS?.height / 2 : 0, SKIER);
-    curveSetter.body.checkCollision.up = curveSetter.body.checkCollision.down = true;
-
-    this.registry.set("curveSetterNoise", getNoiseFunction(10));
-    this.registry.set("curveSetter", curveSetter);
-
-
     // load score text
     const scoreText = this.add.text(16, 16, 'score: 0', { fontSize: '32px', color: '#000' });
     this.registry.set('scoreText', scoreText);
-
-    setInterval(() => {
-      const { staticObstacles } = this;
-      if (!this.gameOver && staticObstacles != null) {
-        let weightSum = 0;
-        let assetPlaced = false;
-        const randomValue = Math.random();
-        Object.keys(STATIC_PROBABILITY_WEIGHTS).forEach(assetKey => {
-          if (!assetPlaced && randomValue <= weightSum + STATIC_PROBABILITY_WEIGHTS[assetKey]) {
-            assetPlaced = true;
-            let yPosition = Math.random() * (this.CANVAS?.height ?? 0);
-            while (yPosition > curveSetter.y - 100 && yPosition < curveSetter.y + 100) {
-              yPosition = Math.random() * (this.CANVAS?.height ?? 0);
-            }
-            const newObstacle = staticObstacles.create(800, yPosition, assetKey, 0);
-            newObstacle.displayHeight = 40;
-            newObstacle.scaleX = newObstacle.scaleY;
-          } else {
-            weightSum += STATIC_PROBABILITY_WEIGHTS[assetKey];
-          }
-        });
-        assetPlaced = false;
-        weightSum = 0;
-      }
-    }, 50);
-
-    setInterval(() => {
-      const { player } = this;
-      if (!this.gameOver && this.dynamicObstacles != null && player != null) {
-        let weightSum = 0;
-        let assetPlaced = false;
-        const randomValue = Math.random();
-        Object.keys(DYNAMIC_PROBABILITY_WEIGHTS).forEach(assetKey => {
-          if (!assetPlaced && randomValue <= weightSum + DYNAMIC_PROBABILITY_WEIGHTS[assetKey]) {
-            assetPlaced = true;
-            switch (assetKey) {
-              case BEAR:
-                const bear = new Tracking(this, SCREEN_WIDTH, player.body.y, BEAR, player);
-                bear.body.setSize(32, 48);
-                this.dynamicObstacles?.add(bear, true);
-                break;
-              case STAR:
-                const star = new Falling(this, SCREEN_WIDTH * (Math.random() + 1) / 2, 0, STAR)
-                this.dynamicObstacles?.add(star, true);
-              case CARTMAN:
-                const cartman = new Chasing(this, SCREEN_WIDTH, Math.random() * SCREEN_HEIGHT, CARTMAN)
-                cartman.displayHeight = 30;
-                cartman.scaleX = cartman.scaleY;
-                this.dynamicObstacles?.add(cartman, true);
-            }
-          } else {
-            weightSum += DYNAMIC_PROBABILITY_WEIGHTS[assetKey];
-          }
-        });
-        assetPlaced = false;
-        weightSum = 0;
-      }
-    }, 3000);
   }
 
   update() {
@@ -194,28 +100,10 @@ export default class Demo extends Phaser.Scene {
       const score = Math.floor(this.ticks / 10);
       this.registry.get('scoreText').setText('Score: ' + score);
     }
-    const curveSetter = this.registry.get('curveSetter');
-    const curveSetterNoise = this.registry.get('curveSetterNoise');
 
     this.player?.update();
-    // Randomly move the curveSetter by choosing a value uniformly between -1, 0, 1
-    enum CurveSetterDirection {
-      Up = -1,
-      Down = 1,
-    }
-
-    const direction = curveSetterNoise(this.ticks) < 0 ? CurveSetterDirection.Down : CurveSetterDirection.Up;
-
-    if ((direction == CurveSetterDirection.Up &&
-      curveSetter.y > PLAYER_HEIGHT / 2) ||
-      (direction == CurveSetterDirection.Down &&
-        curveSetter.y < (this.CANVAS?.height ? this.CANVAS?.height : 0) - PLAYER_HEIGHT / 2)
-    ) {
-      curveSetter.setVelocityY(direction * PLAYER_VELOCITY);
-    } else {
-      curveSetter.setVelocityY(0);
-    }
-
+    this.spawner?.updateCurveSetter(this.ticks);
+    this.spawner?.maybeSpawnObstacle(this.ticks);
 
     // update static obstacle positions
     this.staticObstacles?.children.entries.forEach((child) => {
@@ -227,10 +115,4 @@ export default class Demo extends Phaser.Scene {
       }
     });
   }
-}
-
-function normalizeWeights(weights: Record<string, number>): Record<string, number> {
-  const valueSum = Object.values(weights).reduce((a, b) => a + b);
-  const coefficient = 1 / valueSum;
-  return Object.entries(weights).reduce((p, [k, v]) => Object.assign(p, { [k]: v * coefficient }), {});
 }
