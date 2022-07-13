@@ -67,7 +67,7 @@ export class Spawner {
             (direction == CurveSetterDirection.Down &&
                 this.curveSetter.y < this.scene.canvas.height - Player.HEIGHT / 2)
         ) {
-            this.curveSetter.setVelocityY(direction * (Player.VELOCITY - 50)); // make curve setter a little slower than player to make game less difficult
+            this.curveSetter.setVelocityY(direction * (Player.VELOCITY - 100)); // make curve setter a little slower than player to make game less difficult
         } else {
             this.curveSetter.setVelocityY(0);
         }
@@ -86,7 +86,7 @@ export class Spawner {
                     if (!assetPlaced && randomValue <= weightSum + PROBABILITY_WEIGHTS[assetKey]) {
                         assetPlaced = true;
                         let yPosition = this.getValidSpawnY();
-                        while (yPosition > this.curveSetter.y - 50 && yPosition < this.curveSetter.y + 50) {
+                        while (yPosition > this.curveSetter.y - 60 && yPosition < this.curveSetter.y + 60) {
                             yPosition = this.getValidSpawnY();
                         }
                         console.log(assetKey)
