@@ -10,7 +10,7 @@ export default class Chasing extends Phaser.Physics.Arcade.Sprite
 		this.play(texture);
 	}
 
-    chase() {
+    private chase() {
         this.setVelocityX(GAME_VELOCITY * 4);
     }
 

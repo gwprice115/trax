@@ -13,7 +13,7 @@ export default class Tracking extends Phaser.Physics.Arcade.Sprite
 		this.play(texture);
 	}
 
-	trackPlayer() {
+	private trackPlayer() {
 		const playerX = this.player.body.x
 		const playerY = this.player.body.y
 
