@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 
 export const GAME_VELOCITY = -60;
-import { WOLF, PORTAL, LITTLE_ROCK, BIG_ROCK, SKIER, Spawner, TREE, SNOWMAN, BEAR } from '../Spawner';
+import { WOLF, PORTAL, LITTLE_ROCK, BIG_ROCK, SKIER, Spawner, TREE, SNOWMAN, BEAR, DINOSAUR } from '../Spawner';
 import Player from '../Player';
 import { SCREEN_HEIGHT } from '../config';
 
@@ -21,8 +21,6 @@ export default class SkiFreeScene extends Phaser.Scene {
     super('GameScene');
   }
 
-  private costume = 'base';
-  
   private background?: Phaser.GameObjects.TileSprite;
 
   public staticObstacles?: Phaser.Physics.Arcade.Group;
@@ -36,7 +34,7 @@ export default class SkiFreeScene extends Phaser.Scene {
       delay: 1000,
       loop: false,
       callback: () => {
-          this.scene.start("GameOverScene");
+        this.scene.start("GameOverScene");
       }
     })
   }
@@ -57,6 +55,7 @@ export default class SkiFreeScene extends Phaser.Scene {
     this.load.image(TREE, 'assets/tree_snowy1.png');
     this.load.image(LITTLE_ROCK, 'assets/rock_little.png');
     this.load.image(BIG_ROCK, 'assets/rock_big.png');
+    this.load.spritesheet(DINOSAUR, 'assets/dinosaur.png', { frameWidth: 100, frameHeight: 100 });
     this.load.spritesheet(SKIER, 'assets/skier.png', { frameWidth: Player.WIDTH, frameHeight: Player.HEIGHT });
     this.load.spritesheet(WOLF, 'assets/running_wolf_sprite.png', { frameWidth: 563, frameHeight: 265 });
     this.load.spritesheet(BEAR, 'assets/bear.png', { frameWidth: 200, frameHeight: 200 });
@@ -92,6 +91,13 @@ export default class SkiFreeScene extends Phaser.Scene {
       key: BEAR,
       frames: this.anims.generateFrameNumbers(BEAR, { start: 30, end: 48 }),
       frameRate: 15,
+      repeat: -1,
+    })
+
+    this.anims.create({
+      key: DINOSAUR,
+      frames: this.anims.generateFrameNumbers(DINOSAUR, { start: 0, end: 1 }),
+      frameRate: 5,
       repeat: -1,
     })
 
@@ -133,10 +139,15 @@ export default class SkiFreeScene extends Phaser.Scene {
       }
     });
 
+    this.staticObstacles?.children.iterate(obstacle => {
+      const ob = obstacle as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
+      ob.texture.key === DINOSAUR ? ob.anims.play(DINOSAUR, true) : {}
+    });
+
     // Dynamic obstacle trash collection
     this.dynamicObstacles?.children.entries.forEach((child) => {
       const typedChild = (child as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody);
-      if(typedChild.body.right <= 0) {
+      if (typedChild.body.right <= 0) {
         this.dynamicObstacles?.remove(typedChild, true, true);
       }
     });
