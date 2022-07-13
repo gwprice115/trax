@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 
 export const GAME_VELOCITY = -60;
-import { CARTMAN, PORTAL, ROCK, SKIER, Spawner, STAR, TREE } from '../Spawner';
+import { WOLF, PORTAL, LITTLE_ROCK, BIG_ROCK, SKIER, Spawner, TREE, SNOWMAN, BEAR } from '../Spawner';
 import Player from '../Player';
 import { SCREEN_HEIGHT } from '../config';
 
@@ -41,26 +41,25 @@ export default class SkiFreeScene extends Phaser.Scene {
     })
   }
 
-  private worldToTileUnit = (worldUnit: number) => worldUnit / 60;
+  private worldToTileUnit = (worldUnit: number) => worldUnit / 150;
 
-  public getSizeWithPerspective = (yPosition: number, baseSize: number) => baseSize / 2 * yPosition / this.canvas.height + baseSize / 2;
+  public getSizeWithPerspective = (yPosition: number, baseSize: number) => (baseSize * 0.3 * yPosition / this.canvas.height) + (baseSize * 0.7);
 
-  public getSkyHeight = () => this.canvas.height * 0.35;
+  public getSkyHeight = () => this.canvas.height * 0.38;
 
   preload() {
     this.scale.refresh();
     this.canvas = this.game.canvas;
-    this.load.image('sky', 'http://labs.phaser.io/assets/skies/sky4.png');
-    this.load.image('ground', 'http://labs.phaser.io/assets/sprites/platform.png');
     this.load.image('background', 'assets/background.png')
-    this.load.image(STAR, 'http://labs.phaser.io/assets/demoscene/star.png');
+    this.load.image(SNOWMAN, 'assets/snowman.png');
     this.load.image(PORTAL, 'http://labs.phaser.io/assets/sprites/mushroom.png')
-    this.load.image(TREE, 'http://labs.phaser.io/assets/sprites/tree-european.png');
-    this.load.image(ROCK, 'http://labs.phaser.io/assets/sprites/shinyball.png');
     this.load.image(SKI_TRAIL, 'http://labs.phaser.io/assets/particles/blue.png');
+    this.load.image(TREE, 'assets/tree_snowy1.png');
+    this.load.image(LITTLE_ROCK, 'assets/rock_little.png');
+    this.load.image(BIG_ROCK, 'assets/rock_big.png');
     this.load.spritesheet(SKIER, 'assets/skier.png', { frameWidth: Player.WIDTH, frameHeight: Player.HEIGHT });
-    this.load.image(CARTMAN, 'http://labs.phaser.io/assets/svg/cartman.svg');
-    this.load.spritesheet('bear', 'assets/bear.png', { frameWidth: 200, frameHeight: 200 });
+    this.load.spritesheet(WOLF, 'assets/running_wolf_sprite.png', { frameWidth: 563, frameHeight: 265 });
+    this.load.spritesheet(BEAR, 'assets/bear.png', { frameWidth: 200, frameHeight: 200 });
   }
 
   create() {
@@ -90,9 +89,16 @@ export default class SkiFreeScene extends Phaser.Scene {
     });
 
     this.anims.create({
-      key: 'bear',
-      frames: this.anims.generateFrameNumbers('bear', { start: 30, end: 48 }),
+      key: BEAR,
+      frames: this.anims.generateFrameNumbers(BEAR, { start: 30, end: 48 }),
       frameRate: 15,
+      repeat: -1,
+    })
+
+    this.anims.create({
+      key: WOLF,
+      frames: this.anims.generateFrameNumbers(WOLF, { start: 0, end: 7 }),
+      frameRate: 5,
       repeat: -1,
     })
 
@@ -107,7 +113,7 @@ export default class SkiFreeScene extends Phaser.Scene {
   update() {
     if (!this.gameOver) {
       this.ticks++;
-      this.gameVelocity -= 0.05;
+      this.gameVelocity -= 0.1;
       this.background && (this.background.tilePositionX -= this.worldToTileUnit(this.gameVelocity));
       const score = Math.floor(this.ticks / 10);
       this.registry.get('scoreText').setText('Score: ' + score);

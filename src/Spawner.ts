@@ -9,11 +9,13 @@ import { getNoiseFunction } from "./utils/utils";
 
 export const TREE = 'tree';
 export const ROCK = 'rock';
+export const BIG_ROCK = 'big_rock'
+export const LITTLE_ROCK = 'little_rock'
 export const PORTAL = 'portal';
-export const STAR = 'star';
+export const SNOWMAN = 'snowman';
 export const SKIER = 'skier';
 export const BEAR = 'bear';
-export const CARTMAN = 'cartman';
+export const WOLF = 'wolf';
 
 enum CurveSetterDirection {
     Up = -1,
@@ -22,7 +24,7 @@ enum CurveSetterDirection {
 
 const curveSetterNoise = getNoiseFunction(10);
 
-const SPAWN_CHECK_RATE = 10;
+const SPAWN_CHECK_RATE = 20;
 const PROBABILITY_OF_SPAWN = .5;
 
 const SHOW_CURVE_SETTER = true;
@@ -34,12 +36,13 @@ function normalizeWeights(weights: Record<string, number>): Record<string, numbe
 }
 
 const PROBABILITY_WEIGHTS = normalizeWeights({
-    [ROCK]: 4,
-    [TREE]: 4,
+    [LITTLE_ROCK]: 5,
+    [BIG_ROCK]: 3,
+    [TREE]: 10,
     [PORTAL]: 0,
-    [STAR]: 2,
-    [BEAR]: 1,
-    [CARTMAN]: 0.5,
+    [SNOWMAN]: 3,
+    [BEAR]: 2,
+    [WOLF]: 1,
 });
 
 export class Spawner {
@@ -51,6 +54,7 @@ export class Spawner {
         this.scene = scene;
         this.curveSetter = scene.physics.add.sprite(scene.canvas.width, scene.canvas.height / 2, SKIER);
         this.curveSetter.body.checkCollision.up = this.curveSetter.body.checkCollision.down = true;
+        this.curveSetter.displayHeight = Player.DISPLAY_HEIGHT;
         if (!SHOW_CURVE_SETTER) {
             this.curveSetter.disableBody(false, true);
         }
@@ -59,11 +63,11 @@ export class Spawner {
     public updateCurveSetter(ticks: number) {
         const direction = curveSetterNoise(ticks) < 0 ? CurveSetterDirection.Down : CurveSetterDirection.Up;
         if ((direction == CurveSetterDirection.Up &&
-            this.curveSetter.y > this.scene.getSkyHeight()) ||
+            this.curveSetter.y > Player.HEIGHT / 2) && this.curveSetter.y > this.scene.getSkyHeight() ||
             (direction == CurveSetterDirection.Down &&
                 this.curveSetter.y < this.scene.canvas.height - Player.HEIGHT / 2)
         ) {
-            this.curveSetter.setVelocityY(direction * Player.VELOCITY);
+            this.curveSetter.setVelocityY(direction * (Player.VELOCITY - 100)); // make curve setter a little slower than player to make game less difficult
         } else {
             this.curveSetter.setVelocityY(0);
         }
@@ -82,7 +86,7 @@ export class Spawner {
                     if (!assetPlaced && randomValue <= weightSum + PROBABILITY_WEIGHTS[assetKey]) {
                         assetPlaced = true;
                         let yPosition = this.getValidSpawnY();
-                        while (yPosition > this.curveSetter.y - 50 && yPosition < this.curveSetter.y + 50) {
+                        while (yPosition > this.curveSetter.y - 60 && yPosition < this.curveSetter.y + 60) {
                             yPosition = this.getValidSpawnY();
                         }
                         console.log(assetKey)
@@ -92,18 +96,19 @@ export class Spawner {
                                 bear.body.setSize(32, 48);
                                 dynamicObstacles.add(bear, true);
                                 break;
-                            case STAR:
-                                const star = new Falling(this.scene, this.scene.canvas.width * (Math.random() + 1) / 2, 0, STAR)
-                                dynamicObstacles.add(star, true);
-                            case CARTMAN:
-                                const cartman = new Chasing(this.scene, this.scene.canvas.width, Math.random() * SCREEN_HEIGHT, CARTMAN)
-                                cartman.displayHeight = 30;
-                                cartman.scaleX = cartman.scaleY;
-                                dynamicObstacles.add(cartman, true);
+                            case SNOWMAN:
+                                const snowman = new Falling(this.scene, this.scene.canvas.width * (Math.random() + 1) / 2, 0, SNOWMAN)
+                                dynamicObstacles.add(snowman, true);
+                            case WOLF:
+                                const wolf = new Chasing(this.scene, this.scene.canvas.width, yPosition, WOLF)
+                                wolf.body.setSize(80, 32);
+                                wolf.displayHeight = 32
+                                wolf.scaleX = wolf.scaleY;
+                                dynamicObstacles.add(wolf, true);
                                 break;
                             default: //static obstacles
                                 const newObstacle = staticObstacles.create(this.scene.canvas.width, yPosition, assetKey, 0);
-                                newObstacle.displayHeight = this.scene.getSizeWithPerspective(newObstacle.y, 40)
+                                newObstacle.displayHeight = this.scene.getSizeWithPerspective(newObstacle.y, newObstacle.height)
                                 newObstacle.scaleX = newObstacle.scaleY;
                                 break;
                         }
@@ -116,6 +121,4 @@ export class Spawner {
             }
         }
     }
-
-
 }
