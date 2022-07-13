@@ -17,6 +17,11 @@ const SKIER = 'skier';
 const BEAR = 'bear';
 const CARTMAN = 'cartman';
 
+
+const PLAYER_WIDTH = 74;
+const PLAYER_HEIGHT = 68;
+const PLAYER_VELOCITY = 160;
+
 const STATIC_PROBABILITY_WEIGHTS = normalizeWeights({
   [ROCK]: 1,
   [TREE]: 1,
@@ -31,20 +36,13 @@ const DYNAMIC_PROBABILITY_WEIGHTS = normalizeWeights({
 
 export default class Demo extends Phaser.Scene {
   private CANVAS?: HTMLCanvasElement;
-  private PLAYER_WIDTH: number;
-  private PLAYER_HEIGHT: number;
-  private PLAYER_VELOCITY: number;
-  private ticks: number;
+  private ticks: number = 0;
   public gameOver: boolean = false;
   private player: Player | undefined;
   public cursors: Phaser.Types.Input.Keyboard.CursorKeys | undefined;
 
   constructor() {
     super('GameScene');
-    this.PLAYER_WIDTH = 74;
-    this.PLAYER_HEIGHT = 68;
-    this.PLAYER_VELOCITY = 160;
-    this.ticks = 0;
   }
 
   private costume = 'base';
@@ -81,7 +79,7 @@ export default class Demo extends Phaser.Scene {
     this.load.image(PORTAL, 'http://labs.phaser.io/assets/sprites/mushroom.png')
     this.load.image(TREE, 'http://labs.phaser.io/assets/sprites/tree-european.png');
     this.load.image(ROCK, 'http://labs.phaser.io/assets/sprites/shinyball.png');
-    this.load.spritesheet(SKIER, 'assets/skier.png', { frameWidth: this.PLAYER_WIDTH, frameHeight: this.PLAYER_HEIGHT });
+    this.load.spritesheet(SKIER, 'assets/skier.png', { frameWidth: PLAYER_WIDTH, frameHeight: PLAYER_HEIGHT });
     this.load.image(CARTMAN, 'http://labs.phaser.io/assets/svg/cartman.svg');
     this.load.spritesheet('bear', 'assets/bear.png', { frameWidth: 200, frameHeight: 200 });
   }
@@ -209,11 +207,11 @@ export default class Demo extends Phaser.Scene {
     const direction = curveSetterNoise(this.ticks) < 0 ? CurveSetterDirection.Down : CurveSetterDirection.Up;
 
     if ((direction == CurveSetterDirection.Up &&
-      curveSetter.y > this.PLAYER_HEIGHT / 2) ||
+      curveSetter.y > PLAYER_HEIGHT / 2) ||
       (direction == CurveSetterDirection.Down &&
-        curveSetter.y < (this.CANVAS?.height ? this.CANVAS?.height : 0) - this.PLAYER_HEIGHT / 2)
+        curveSetter.y < (this.CANVAS?.height ? this.CANVAS?.height : 0) - PLAYER_HEIGHT / 2)
     ) {
-      curveSetter.setVelocityY(direction * this.PLAYER_VELOCITY);
+      curveSetter.setVelocityY(direction * PLAYER_VELOCITY);
     } else {
       curveSetter.setVelocityY(0);
     }
