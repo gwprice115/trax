@@ -19,7 +19,6 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 		this.skiTrailEmitter = this.gameScene.add.particles(SKI_TRAIL).createEmitter({
 			name: 'skiTrailEmitter',
 			gravityX: -1000,
-			blendMode: 'ADD',
 		}).setScaleY(0.07).setScaleX(0.1);
 		scene.add.existing(this);
 		scene.physics.add.existing(this);
