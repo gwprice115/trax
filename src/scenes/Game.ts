@@ -1,5 +1,5 @@
 import Phaser, { GameObjects } from 'phaser';
-import { SCREEN_WIDTH } from '../config';
+import { SCREEN_HEIGHT, SCREEN_WIDTH } from '../config';
 import Tracking from '../dynamicObstacles/Tracking';
 import Chasing from '../dynamicObstacles/Chasing';
 import Falling from '../dynamicObstacles/Falling';
@@ -12,12 +12,17 @@ const TREE = 'tree';
 const ROCK = 'rock';
 const PORTAL = 'portal';
 const STAR = 'star';
+const BEAR = 'bear';
 
-const PROBABILITY_WEIGHTS = normalizeWeights({
+const STATIC_PROBABILITY_WEIGHTS = normalizeWeights({
   [ROCK]: 1,
   [TREE]: 1,
   [PORTAL]: 1,
-  [STAR]: 0.5,
+});
+
+const DYNAMIC_PROBABILITY_WEIGHTS = normalizeWeights({
+  [STAR]: 2,
+  [BEAR]: 1,
 });
 
 export default class Demo extends Phaser.Scene {
@@ -36,13 +41,16 @@ export default class Demo extends Phaser.Scene {
     this.ticks = 0;
   }
 
-  private bears?: Phaser.Physics.Arcade.Group;
-  private stars?: Phaser.Physics.Arcade.Group;
+  private bears: Phaser.Physics.Arcade.Group | undefined;
+  private stars: Phaser.Physics.Arcade.Group | undefined;
+
+  private staticObstacles?: Phaser.Physics.Arcade.Group;
+  private dynamicObstacles?: Phaser.Physics.Arcade.Group;
 
   private score = 0;
   private costume = 'dude';
 
-  private hitStaticObstacle = (player: Phaser.Types.Physics.Arcade.GameObjectWithBody, obstacle: Phaser.Types.Physics.Arcade.GameObjectWithBody) => {
+  private hitObstacle = (player: Phaser.Types.Physics.Arcade.GameObjectWithBody, obstacle: Phaser.Types.Physics.Arcade.GameObjectWithBody) => {
     if ((obstacle as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody).texture.key === PORTAL) {
       this.changeCostume(player, obstacle);
     } else {
@@ -52,13 +60,11 @@ export default class Demo extends Phaser.Scene {
     }
   }
 
-
+  // TODO change bear spawning to be random instead of dependent on collecting stars
   private collectStar = (player: Phaser.Types.Physics.Arcade.GameObjectWithBody, star: Phaser.Types.Physics.Arcade.GameObjectWithBody) => {
     (star as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody).disableBody(true, true);
     this.score += 10;
     this.registry.get('scoreText').setText('Score: ' + this.score);
-
-    // TODO when we get path coordinates: const pathY = map.getY((SCREEN_WIDTH - player.body.x) / 4);
 
     var y = (player as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody).y;
 
@@ -98,6 +104,14 @@ export default class Demo extends Phaser.Scene {
     const player = this.physics.add.sprite(100, 450, 'dude');
     player.setCollideWorldBounds(true);
     this.registry.set('player', player);
+
+    // set up static and dynamic obstacle groups
+    this.staticObstacles = this.physics.add.group({
+      runChildUpdate: true
+    })
+    this.dynamicObstacles = this.physics.add.group({
+      runChildUpdate: true
+    })
 
     // define animations for dude
     this.anims.create({
@@ -151,24 +165,6 @@ export default class Demo extends Phaser.Scene {
     const cursors = this.input.keyboard.createCursorKeys();
     this.registry.set('cursors', cursors);
 
-    this.bears = this.physics.add.group({
-			classType: Tracking,
-			runChildUpdate: true
-		})
-    this.physics.add.collider(player, this.bears, this.hitStaticObstacle, undefined, this);
-
-    this.stars = this.physics.add.group({
-      classType: Falling,
-      key: 'star',
-      repeat: 110,
-      setXY: { x: 12, y: 0, stepX: 70 },
-      runChildUpdate: true
-    })
-    this.stars.children.iterate(child => {
-      const typedChild = child as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
-      typedChild.setY(Phaser.Math.FloatBetween(0, 200));
-    });
-    this.physics.add.overlap(player, this.stars, this.collectStar, undefined, this);
     const curveSetter = this.physics.add.sprite((this.CANVAS?.width ? this.CANVAS?.width : 0),
       this.CANVAS?.height ? this.CANVAS?.height / 2 : 0, 'dude');
     curveSetter.body.checkCollision.up = curveSetter.body.checkCollision.down = true;
@@ -181,25 +177,27 @@ export default class Demo extends Phaser.Scene {
     const scoreText = this.add.text(16, 16, 'score: 0', { fontSize: '32px', color: '#000' });
     this.registry.set('scoreText', scoreText);
 
-    const staticObstacles = this.physics.add.group();
-    this.physics.add.overlap(player, staticObstacles, this.hitStaticObstacle, undefined, this);
+    // const staticObstacles = this.physics.add.group();
+    this.physics.add.overlap(player, this.staticObstacles!, this.hitObstacle, undefined, this);
 
-    this.registry.set('staticObstacles', staticObstacles);
+    // const dynamicObstacles = this.physics.add.group();
+    this.physics.add.overlap(player, this.dynamicObstacles!, this.hitObstacle, undefined, this);
+
     setInterval(() => {
-      if (!this.gameOver) {
+      if (!this.gameOver && this.staticObstacles != null) {
         let weightSum = 0;
         let assetPlaced = false;
         const randomValue = Math.random();
-        Object.keys(PROBABILITY_WEIGHTS).forEach(assetKey => {
-          console.log(assetKey);
+        Object.keys(STATIC_PROBABILITY_WEIGHTS).forEach(assetKey => {
+          // console.log(assetKey);
           // console.log(weightSum + randomValue, PROBABILITY_WEIGHTS[assetKey]);
-          if (!assetPlaced && randomValue <= weightSum + PROBABILITY_WEIGHTS[assetKey]) {
+          if (!assetPlaced && randomValue <= weightSum + STATIC_PROBABILITY_WEIGHTS[assetKey]) {
             assetPlaced = true;
-            const newObstacle = staticObstacles.create(800, Math.random() * (this.CANVAS?.height ?? 0), assetKey, 0);
+            const newObstacle = this.staticObstacles.create(800, Math.random() * (this.CANVAS?.height ?? 0), assetKey, 0);
             newObstacle.displayHeight = 40;
             newObstacle.scaleX = newObstacle.scaleY;
           } else {
-            weightSum += PROBABILITY_WEIGHTS[assetKey];
+            weightSum += STATIC_PROBABILITY_WEIGHTS[assetKey];
           }
         });
         assetPlaced = false;
@@ -207,6 +205,34 @@ export default class Demo extends Phaser.Scene {
       }
     }, 500);
 
+    setInterval(() => {
+      if (!this.gameOver && this.dynamicObstacles != null) {
+        let weightSum = 0;
+        let assetPlaced = false;
+        const randomValue = Math.random();
+        Object.keys(DYNAMIC_PROBABILITY_WEIGHTS).forEach(assetKey => {
+          console.log(assetKey);
+          // console.log(weightSum + randomValue, PROBABILITY_WEIGHTS[assetKey]);
+          if (!assetPlaced && randomValue <= weightSum + DYNAMIC_PROBABILITY_WEIGHTS[assetKey]) {
+            assetPlaced = true;
+            switch (assetKey) {
+              case BEAR:
+                const bear = new Tracking(this, SCREEN_WIDTH, player.body.y, BEAR, player);
+                bear.body.setSize(32, 48);
+                this.dynamicObstacles.add(bear, true);
+                break;
+              case STAR:
+                const star = new Falling(this, SCREEN_WIDTH * (Math.random()+1)/2, 0, STAR)
+                this.dynamicObstacles.add(star, true);
+            }
+          } else {
+            weightSum += DYNAMIC_PROBABILITY_WEIGHTS[assetKey];
+          }
+        });
+        assetPlaced = false;
+        weightSum = 0;
+      }
+    }, 3000);
   }
 
   update() {
@@ -238,11 +264,11 @@ export default class Demo extends Phaser.Scene {
     curveSetter.setVelocityY(direction * this.PLAYER_VELOCITY);
 
     // update static obstacle positions
-    const staticObstacles: Phaser.Physics.Arcade.Group = this.registry.get('staticObstacles');
-    staticObstacles.children.entries.forEach((child) => {
+    // const staticObstacles: Phaser.Physics.Arcade.Group = this.registry.get('staticObstacles');
+    this.staticObstacles?.children.entries.forEach((child) => {
       const typedChild = (child as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody);
       if (typedChild.body.right <= 0) {
-        staticObstacles.remove(typedChild, true, true);
+        this.staticObstacles.remove(typedChild, true, true);
       } else {
         typedChild.setVelocityX(-100);
       }
