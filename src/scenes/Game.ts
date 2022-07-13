@@ -129,5 +129,13 @@ export default class SkiFreeScene extends Phaser.Scene {
         typedChild.setVelocityX(this.gameVelocity)
       }
     });
+
+    // Dynamic obstacle trash collection
+    this.dynamicObstacles?.children.entries.forEach((child) => {
+      const typedChild = (child as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody);
+      if(typedChild.body.right <= 0) {
+        this.dynamicObstacles?.remove(typedChild, true, true);
+      }
+    });
   }
 }
