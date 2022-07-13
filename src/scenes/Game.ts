@@ -14,7 +14,6 @@ export default class SkiFreeScene extends Phaser.Scene {
   public player: Player | undefined;
   private spawner: Spawner | undefined;
   public cursors: Phaser.Types.Input.Keyboard.CursorKeys | undefined;
-  public keydown: Phaser.Input.Keyboard.KeyboardPlugin | undefined;
 
   public gameVelocity: number = -60
 
@@ -135,10 +134,5 @@ export default class SkiFreeScene extends Phaser.Scene {
         this.dynamicObstacles?.remove(typedChild, true, true);
       }
     });
-
-    if (!this.gameOver) {
-      const score = Math.floor(this.ticks / 10);
-      this.registry.get('scoreText').setText('Score: ' + score);
-    }
   }
 }
