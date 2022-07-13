@@ -51,7 +51,7 @@ export class Spawner {
         this.scene = scene;
         this.curveSetter = scene.physics.add.sprite(scene.canvas.width, scene.canvas.height / 2, SKIER);
         this.curveSetter.body.checkCollision.up = this.curveSetter.body.checkCollision.down = true;
-        if(!SHOW_CURVE_SETTER) {
+        if (!SHOW_CURVE_SETTER) {
             this.curveSetter.disableBody(false, true);
         }
     }
@@ -59,7 +59,7 @@ export class Spawner {
     public updateCurveSetter(ticks: number) {
         const direction = curveSetterNoise(ticks) < 0 ? CurveSetterDirection.Down : CurveSetterDirection.Up;
         if ((direction == CurveSetterDirection.Up &&
-            this.curveSetter.y > Player.HEIGHT / 2) ||
+            this.curveSetter.y > this.scene.getSkyHeight()) ||
             (direction == CurveSetterDirection.Down &&
                 this.curveSetter.y < this.scene.canvas.height - Player.HEIGHT / 2)
         ) {
