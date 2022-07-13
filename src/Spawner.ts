@@ -57,7 +57,6 @@ export class Spawner {
     }
 
     public updateCurveSetter(ticks: number) {
-        // Randomly move the curveSetter by choosing a value uniformly between -1, 0, 1
         const direction = curveSetterNoise(ticks) < 0 ? CurveSetterDirection.Down : CurveSetterDirection.Up;
         if ((direction == CurveSetterDirection.Up &&
             this.curveSetter.y > Player.HEIGHT / 2) ||
