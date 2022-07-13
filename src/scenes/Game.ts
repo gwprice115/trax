@@ -40,6 +40,7 @@ export default class Demo extends Phaser.Scene {
   public gameOver: boolean = false;
   private player: Player | undefined;
   public cursors: Phaser.Types.Input.Keyboard.CursorKeys | undefined;
+  public keydown: Phaser.Input.Keyboard.KeyboardPlugin | undefined;
 
   constructor() {
     super('GameScene');
@@ -71,6 +72,10 @@ export default class Demo extends Phaser.Scene {
     }
   }
 
+  private listener = (keypressed: Phaser.Input.Keyboard.KeyboardPlugin) => {
+    console.log(keypressed.key)
+  }
+
   preload() {
     this.CANVAS = this.game.canvas;
     this.load.image('sky', 'http://labs.phaser.io/assets/skies/sky4.png');
@@ -79,6 +84,7 @@ export default class Demo extends Phaser.Scene {
     this.load.image(PORTAL, 'http://labs.phaser.io/assets/sprites/mushroom.png')
     this.load.image(TREE, 'http://labs.phaser.io/assets/sprites/tree-european.png');
     this.load.image(ROCK, 'http://labs.phaser.io/assets/sprites/shinyball.png');
+    // this.load.image(PORTAL, 'assets/portal.png');
     this.load.spritesheet(SKIER, 'assets/skier.png', { frameWidth: PLAYER_WIDTH, frameHeight: PLAYER_HEIGHT });
     this.load.image(CARTMAN, 'http://labs.phaser.io/assets/svg/cartman.svg');
     this.load.spritesheet('bear', 'assets/bear.png', { frameWidth: 200, frameHeight: 200 });
@@ -116,6 +122,7 @@ export default class Demo extends Phaser.Scene {
     })
 
     this.cursors = this.input.keyboard.createCursorKeys();
+    this.keydown = this.input.keyboard.on('keydown', this.listener);
 
     const curveSetter = this.physics.add.sprite((this.CANVAS?.width ? this.CANVAS?.width : 0),
       this.CANVAS?.height ? this.CANVAS?.height / 2 : 0, SKIER);
@@ -123,11 +130,6 @@ export default class Demo extends Phaser.Scene {
 
     this.registry.set("curveSetterNoise", getNoiseFunction(10));
     this.registry.set("curveSetter", curveSetter);
-
-
-    // load score text
-    const scoreText = this.add.text(16, 16, 'score: 0', { fontSize: '32px', color: '#000' });
-    this.registry.set('scoreText', scoreText);
 
     setInterval(() => {
       const { staticObstacles } = this;
@@ -186,14 +188,26 @@ export default class Demo extends Phaser.Scene {
         weightSum = 0;
       }
     }, 3000);
+
+//     load score text
+    const scoreText = this.add.text(16, 16, 'score: 0', { fontSize: '32px', color: '#000'});
+    scoreText.setDepth(1)
+    this.registry.set('scoreText', scoreText);
+
+    this.time.addEvent({
+      delay: 0,
+      loop: false,
+      callback: () => {
+          this.scene.stop();
+          this.gameOver = true;
+          this.scene.start("GameOverScene");
+      }
+    })
   }
 
   update() {
     this.ticks++;
-    if (!this.gameOver) {
-      const score = Math.floor(this.ticks / 10);
-      this.registry.get('scoreText').setText('Score: ' + score);
-    }
+
     const curveSetter = this.registry.get('curveSetter');
     const curveSetterNoise = this.registry.get('curveSetterNoise');
 
@@ -226,6 +240,11 @@ export default class Demo extends Phaser.Scene {
         typedChild.setVelocityX(-100);
       }
     });
+
+    if (!this.gameOver) {
+      const score = Math.floor(this.ticks / 10);
+      this.registry.get('scoreText').setText('Score: ' + score);
+    }
   }
 }
 
