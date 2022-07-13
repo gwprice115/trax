@@ -4,6 +4,8 @@ export const GAME_VELOCITY = -100;
 import { CARTMAN, PORTAL, ROCK, SKIER, Spawner, STAR, TREE } from '../Spawner';
 import Player from '../Player';
 
+export const SKI_TRAIL = 'ski-trail';
+
 export default class Demo extends Phaser.Scene {
   public canvas: { height: number; width: number } = { height: 0, width: 0 };
   private ticks: number = 0;
@@ -50,6 +52,7 @@ export default class Demo extends Phaser.Scene {
     this.load.image(PORTAL, 'http://labs.phaser.io/assets/sprites/mushroom.png')
     this.load.image(TREE, 'http://labs.phaser.io/assets/sprites/tree-european.png');
     this.load.image(ROCK, 'http://labs.phaser.io/assets/sprites/shinyball.png');
+    this.load.image(SKI_TRAIL, 'http://labs.phaser.io/assets/particles/blue.png');
     this.load.spritesheet(SKIER, 'assets/skier.png', { frameWidth: Player.WIDTH, frameHeight: Player.HEIGHT });
     this.load.image(CARTMAN, 'http://labs.phaser.io/assets/svg/cartman.svg');
     this.load.spritesheet('bear', 'assets/bear.png', { frameWidth: 200, frameHeight: 200 });
