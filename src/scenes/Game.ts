@@ -5,7 +5,7 @@ import { CARTMAN, PORTAL, ROCK, SKIER, Spawner, STAR, TREE } from '../Spawner';
 import Player from '../Player';
 import { SCREEN_HEIGHT } from '../config';
 
-export default class Demo extends Phaser.Scene {
+export default class SkiFreeScene extends Phaser.Scene {
   public canvas: { height: number; width: number } = { height: 0, width: 0 };
   private ticks: number = 0;
   public gameOver: boolean = false;

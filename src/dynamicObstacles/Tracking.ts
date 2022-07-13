@@ -1,12 +1,12 @@
 import Phaser from 'phaser'
-import Demo from '../scenes/Game';
+import SkiFreeScene from '../scenes/Game';
 
 export default class Tracking extends Phaser.Physics.Arcade.Sprite
 {
 	private player: Phaser.Types.Physics.Arcade.GameObjectWithBody;
-	private gameScene: Demo;
+	private gameScene: SkiFreeScene;
 
-	constructor(scene: Demo, x: number, y: number, texture: string, player: Phaser.Types.Physics.Arcade.GameObjectWithBody) {
+	constructor(scene: SkiFreeScene, x: number, y: number, texture: string, player: Phaser.Types.Physics.Arcade.GameObjectWithBody) {
 		super(scene, x, y, texture)
 		this.player = player;
 		scene.add.existing(this);

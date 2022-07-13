@@ -1,5 +1,5 @@
 import Phaser from 'phaser'
-import Demo from './scenes/Game';
+import SkiFreeScene from './scenes/Game';
 
 export default class Player extends Phaser.Physics.Arcade.Sprite {
 
@@ -7,8 +7,8 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 	public static HEIGHT = 68;
 	public static VELOCITY = 160;
 
-	private gameScene: Demo;
-	constructor(scene: Demo, x: number, y: number, texture: string) {
+	private gameScene: SkiFreeScene;
+	constructor(scene: SkiFreeScene, x: number, y: number, texture: string) {
 		super(scene, x, y, texture);
 		this.gameScene = scene;
 		scene.add.existing(this);

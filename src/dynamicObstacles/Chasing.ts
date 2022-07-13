@@ -1,11 +1,10 @@
 import Phaser from 'phaser'
-import Demo, { GAME_VELOCITY } from '../scenes/Game'
+import SkiFreeScene, { GAME_VELOCITY } from '../scenes/Game'
 
 export default class Chasing extends Phaser.Physics.Arcade.Sprite
 {
-	private gameScene: Demo;
-
-	constructor(scene: Demo, x: number, y: number, texture: string) {
+	private gameScene: SkiFreeScene;
+	constructor(scene: SkiFreeScene, x: number, y: number, texture: string) {
 		super(scene, x, y, texture)
 		scene.add.existing(this);
 		scene.physics.add.existing(this);

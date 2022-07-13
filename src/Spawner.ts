@@ -3,7 +3,7 @@ import Chasing from "./dynamicObstacles/Chasing";
 import Falling from "./dynamicObstacles/Falling";
 import Tracking from "./dynamicObstacles/Tracking";
 import Player from "./Player";
-import Demo from "./scenes/Game";
+import SkiFreeScene from "./scenes/Game";
 import { getNoiseFunction } from "./utils/utils";
 
 
@@ -44,10 +44,10 @@ const PROBABILITY_WEIGHTS = normalizeWeights({
 
 export class Spawner {
 
-    private scene: Demo;
+    private scene: SkiFreeScene;
     private curveSetter: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
 
-    constructor(scene: Demo) {
+    constructor(scene: SkiFreeScene) {
         this.scene = scene;
         this.curveSetter = scene.physics.add.sprite(scene.canvas.width, scene.canvas.height / 2, SKIER);
         this.curveSetter.body.checkCollision.up = this.curveSetter.body.checkCollision.down = true;
