@@ -29,20 +29,16 @@ export default class SkiFreeScene extends Phaser.Scene {
   public dynamicObstacles?: Phaser.Physics.Arcade.Group;
 
   private hitObstacle = (player: Phaser.Types.Physics.Arcade.GameObjectWithBody, obstacle: Phaser.Types.Physics.Arcade.GameObjectWithBody) => {
-    if ((obstacle as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody).texture.key === PORTAL) {
-      this.changeCostume(player, obstacle);
-    } else {
-      this.physics.pause();
-      this.gameOver = true;
-      (player as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody).setTint(0xff0000);
-    }
-  }
-
-  private changeCostume = (player: Phaser.Types.Physics.Arcade.GameObjectWithBody, portal: Phaser.Types.Physics.Arcade.GameObjectWithBody) => {
-    switch (this.costume) {
-      case 'base':
-        this.costume = 'recolored';
-    }
+    this.physics.pause();
+    this.gameOver = true;
+    (player as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody).setTint(0xff0000);
+    this.time.addEvent({
+      delay: 1000,
+      loop: false,
+      callback: () => {
+          this.scene.start("GameOverScene");
+      }
+    })
   }
 
   private worldToTileUnit = (worldUnit: number) => worldUnit / 60;
@@ -67,8 +63,8 @@ export default class SkiFreeScene extends Phaser.Scene {
     this.load.spritesheet('bear', 'assets/bear.png', { frameWidth: 200, frameHeight: 200 });
   }
 
-
   create() {
+    this.gameOver = false;
     this.background = this.add.tileSprite(0, 0, this.canvas.width, SCREEN_HEIGHT, "background")
       .setOrigin(0)
     this.player = new Player(this, 100, 450, SKIER);
@@ -105,6 +101,7 @@ export default class SkiFreeScene extends Phaser.Scene {
     // load score text
     const scoreText = this.add.text(16, 16, 'score: 0', { fontSize: '12px', color: '#000' });
     this.registry.set('scoreText', scoreText);
+    scoreText.setDepth(1)
   }
 
   update() {
