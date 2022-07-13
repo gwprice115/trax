@@ -7,6 +7,9 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 	public static HEIGHT = 68;
 	public static VELOCITY = 160;
 
+	// todo: probably combine DISPLAY_HEIGHT and HEIGHT after bounding box work is done?
+	public static DISPLAY_HEIGHT = 50;
+
 	private gameScene: SkiFreeScene;
 	private skiTrailEmitter: Phaser.GameObjects.Particles.ParticleEmitter;
 
@@ -21,6 +24,8 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 		scene.add.existing(this);
 		scene.physics.add.existing(this);
 		this.setSize(70, 10).setOffset(5, 55);
+		this.displayHeight = Player.DISPLAY_HEIGHT;
+		this.scaleX = this.scaleY;
 		this.setCollideWorldBounds(true);
 	}
 
@@ -34,13 +39,13 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 					this.setVelocityY(0)
 				} else {
 					this.setVelocityY(-Player.VELOCITY);
-					this.angle = -30;
+					// this.angle = -30;
 					this.setOffset(10, 35);
 				}
 			}
 			else if (this.gameScene.cursors?.down.isDown) {
 				this.setVelocityY(Player.VELOCITY);
-				this.angle = 30;
+				// this.angle = 30;
 				this.setOffset(-12, 65);
 			}
 			else {
@@ -48,6 +53,8 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 				this.angle = 0;
 				this.setOffset(5, 55);
 			}
+			this.displayHeight = this.gameScene.getSizeWithPerspective(this.y, Player.DISPLAY_HEIGHT)
+			this.scaleX = this.scaleY;
 		}
 	}
 }
