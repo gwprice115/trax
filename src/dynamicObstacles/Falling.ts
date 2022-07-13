@@ -1,5 +1,4 @@
 import Phaser from 'phaser'
-import { SCREEN_WIDTH } from '../config';
 import { GAME_VELOCITY } from '../scenes/Game'
 
 export default class Falling extends Phaser.Physics.Arcade.Sprite
@@ -8,7 +7,6 @@ export default class Falling extends Phaser.Physics.Arcade.Sprite
 		super(scene, x, y, texture)
 		scene.add.existing(this);
 		scene.physics.add.existing(this);
-		// this.play(texture);
 	}
 
     private fall() {

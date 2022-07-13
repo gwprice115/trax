@@ -7,7 +7,6 @@ export default class Chasing extends Phaser.Physics.Arcade.Sprite
 		super(scene, x, y, texture)
 		scene.add.existing(this);
 		scene.physics.add.existing(this);
-		this.play(texture);
 	}
 
     private chase() {
