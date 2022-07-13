@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 
-export const SCREEN_WIDTH = 800;
-export const SCREEN_HEIGHT = 600;
+export const SCREEN_WIDTH = 1000;
+export const SCREEN_HEIGHT = 300;
 
 export const config = {
   type: Phaser.AUTO,

@@ -42,6 +42,8 @@ const PROBABILITY_WEIGHTS = normalizeWeights({
     [CARTMAN]: 0.5,
 });
 
+export const getSizeWithPerspective = (yPosition: number, baseSize: number) => baseSize / 2 * yPosition / SCREEN_HEIGHT + baseSize / 2;
+
 export class Spawner {
 
     private scene: Demo;
@@ -100,7 +102,7 @@ export class Spawner {
                                 break;
                             default: //static obstacles
                                 const newObstacle = staticObstacles.create(800, yPosition, assetKey, 0);
-                                newObstacle.displayHeight = 40;
+                                newObstacle.displayHeight = getSizeWithPerspective(newObstacle.y, 40)
                                 newObstacle.scaleX = newObstacle.scaleY;
                                 break;
                         }
