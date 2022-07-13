@@ -1,11 +1,12 @@
 import Phaser from 'phaser';
 
 export const GAME_VELOCITY = -60;
-import { WOLF, PORTAL, LITTLE_ROCK, BIG_ROCK, SKIER, Spawner, TREE, SNOWMAN, BEAR } from '../Spawner';
+import { WOLF, PORTAL, LITTLE_ROCK, BIG_ROCK, SKIER, Spawner, TREE, SNOWMAN, BEAR, DINOSAUR } from '../Spawner';
 import Player from '../Player';
 import { SCREEN_HEIGHT } from '../config';
 
 export const SKI_TRAIL = 'ski-trail';
+export const START_GAME_VELOCITY = -80;
 
 export default class SkiFreeScene extends Phaser.Scene {
   public canvas: { height: number; width: number } = { height: 0, width: 0 };
@@ -15,7 +16,7 @@ export default class SkiFreeScene extends Phaser.Scene {
   private spawner: Spawner | undefined;
   public cursors: Phaser.Types.Input.Keyboard.CursorKeys | undefined;
 
-  public gameVelocity: number = -60
+  public gameVelocity: number = START_GAME_VELOCITY;
 
   constructor() {
     super('GameScene');
@@ -33,6 +34,8 @@ export default class SkiFreeScene extends Phaser.Scene {
   private hitObstacle = (player: Phaser.Types.Physics.Arcade.GameObjectWithBody, obstacle: Phaser.Types.Physics.Arcade.GameObjectWithBody) => {
     this.physics.pause();
     this.gameOver = true;
+    this.gameVelocity = START_GAME_VELOCITY;
+    this.ticks = 0;
     (player as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody).setTint(0xff0000);
     this.time.addEvent({
       delay: 1000,
@@ -61,6 +64,7 @@ export default class SkiFreeScene extends Phaser.Scene {
     this.load.image(TREE, 'assets/tree_snowy1.png');
     this.load.image(LITTLE_ROCK, 'assets/rock_little.png');
     this.load.image(BIG_ROCK, 'assets/rock_big.png');
+    this.load.spritesheet(DINOSAUR, 'assets/dinosaur.png', { frameWidth: 100, frameHeight: 100 });
     this.load.spritesheet(SKIER, 'assets/skier.png', { frameWidth: Player.WIDTH, frameHeight: Player.HEIGHT });
     this.load.spritesheet(WOLF, 'assets/running_wolf_sprite.png', { frameWidth: 563, frameHeight: 265 });
     this.load.spritesheet(BEAR, 'assets/bear.png', { frameWidth: 200, frameHeight: 200 });
@@ -106,6 +110,13 @@ export default class SkiFreeScene extends Phaser.Scene {
     })
 
     this.anims.create({
+      key: DINOSAUR,
+      frames: this.anims.generateFrameNumbers(DINOSAUR, { start: 0, end: 1 }),
+      frameRate: 5,
+      repeat: -1,
+    })
+
+    this.anims.create({
       key: WOLF,
       frames: this.anims.generateFrameNumbers(WOLF, { start: 0, end: 7 }),
       frameRate: 5,
@@ -143,6 +154,11 @@ export default class SkiFreeScene extends Phaser.Scene {
       } else {
         typedChild.setVelocityX(this.gameVelocity)
       }
+    });
+
+    this.staticObstacles?.children.iterate(obstacle => {
+      const ob = obstacle as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
+      ob.texture.key === DINOSAUR ? ob.anims.play(DINOSAUR, true) : {}
     });
 
     // Dynamic obstacle trash collection

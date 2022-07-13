@@ -16,6 +16,7 @@ export const SNOWMAN = 'snowman';
 export const SKIER = 'skier';
 export const BEAR = 'bear';
 export const WOLF = 'wolf';
+export const DINOSAUR = 'dinosaur';
 
 enum CurveSetterDirection {
     Up = -1,
@@ -43,6 +44,7 @@ const PROBABILITY_WEIGHTS = normalizeWeights({
     [SNOWMAN]: 3,
     [BEAR]: 2,
     [WOLF]: 1,
+    [DINOSAUR]: 2,
 });
 
 export class Spawner {
