@@ -66,19 +66,6 @@ export default class Demo extends Phaser.Scene {
     }
   }
 
-  // TODO change bear spawning to be random instead of dependent on collecting stars
-  private collectStar = (player: Phaser.Types.Physics.Arcade.GameObjectWithBody, star: Phaser.Types.Physics.Arcade.GameObjectWithBody) => {
-    (star as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody).disableBody(true, true);
-    this.score += 10;
-    this.registry.get('scoreText').setText('Score: ' + this.score);
-
-    var y = (player as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody).y;
-
-    const bear = new Tracking(this, 800, y, "bear", player);
-    bear.body.setSize(32, 48);
-    this.bears?.add(bear, true);
-  }
-
   private changeCostume = (player: Phaser.Types.Physics.Arcade.GameObjectWithBody, portal: Phaser.Types.Physics.Arcade.GameObjectWithBody) => {
     switch (this.costume) {
       case 'base':
