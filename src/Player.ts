@@ -1,5 +1,5 @@
 import Phaser from 'phaser'
-import SkiFreeScene from './scenes/Game';
+import SkiFreeScene, { SKI_TRAIL } from './scenes/Game';
 
 export default class Player extends Phaser.Physics.Arcade.Sprite {
 
@@ -8,9 +8,16 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 	public static VELOCITY = 160;
 
 	private gameScene: SkiFreeScene;
+	private skiTrailEmitter: Phaser.GameObjects.Particles.ParticleEmitter;
+
 	constructor(scene: SkiFreeScene, x: number, y: number, texture: string) {
 		super(scene, x, y, texture);
 		this.gameScene = scene;
+		this.skiTrailEmitter = this.gameScene.add.particles(SKI_TRAIL).createEmitter({
+			name: 'skiTrailEmitter',
+			gravityX: -1000,
+			blendMode: 'ADD',
+		}).setScaleY(0.07).setScaleX(0.1);
 		scene.add.existing(this);
 		scene.physics.add.existing(this);
 		this.setSize(70, 10).setOffset(5, 55);
@@ -20,6 +27,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 	update() {
 		if (!this.gameScene.gameOver) {
 			this.anims.play(this.texture, true);
+			this.skiTrailEmitter.setPosition(this.x, this.y + 30);
 			if (this.gameScene.cursors?.up.isDown) {
 				// sky bounds
 				if (this.y < this.gameScene.getSkyHeight()) {
