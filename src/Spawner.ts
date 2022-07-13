@@ -3,7 +3,7 @@ import Chasing from "./dynamicObstacles/Chasing";
 import Falling from "./dynamicObstacles/Falling";
 import Tracking from "./dynamicObstacles/Tracking";
 import Player from "./Player";
-import Demo from "./scenes/Game";
+import SkiFreeScene from "./scenes/Game";
 import { getNoiseFunction } from "./utils/utils";
 
 
@@ -42,18 +42,16 @@ const PROBABILITY_WEIGHTS = normalizeWeights({
     [CARTMAN]: 0.5,
 });
 
-export const getSizeWithPerspective = (yPosition: number, baseSize: number) => baseSize / 2 * yPosition / SCREEN_HEIGHT + baseSize / 2;
-
 export class Spawner {
 
-    private scene: Demo;
+    private scene: SkiFreeScene;
     private curveSetter: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
 
-    constructor(scene: Demo) {
+    constructor(scene: SkiFreeScene) {
         this.scene = scene;
         this.curveSetter = scene.physics.add.sprite(scene.canvas.width, scene.canvas.height / 2, SKIER);
         this.curveSetter.body.checkCollision.up = this.curveSetter.body.checkCollision.down = true;
-        if(!SHOW_CURVE_SETTER) {
+        if (!SHOW_CURVE_SETTER) {
             this.curveSetter.disableBody(false, true);
         }
     }
@@ -61,7 +59,7 @@ export class Spawner {
     public updateCurveSetter(ticks: number) {
         const direction = curveSetterNoise(ticks) < 0 ? CurveSetterDirection.Down : CurveSetterDirection.Up;
         if ((direction == CurveSetterDirection.Up &&
-            this.curveSetter.y > Player.HEIGHT / 2) ||
+            this.curveSetter.y > this.scene.getSkyHeight()) ||
             (direction == CurveSetterDirection.Down &&
                 this.curveSetter.y < this.scene.canvas.height - Player.HEIGHT / 2)
         ) {
@@ -70,6 +68,8 @@ export class Spawner {
             this.curveSetter.setVelocityY(0);
         }
     }
+
+    private getValidSpawnY = () => Math.random() * (this.scene.canvas.height - this.scene.getSkyHeight()) + this.scene.getSkyHeight();
 
     public maybeSpawnObstacle(ticks: number) {
         if (ticks % SPAWN_CHECK_RATE === 0 && Math.random() < PROBABILITY_OF_SPAWN) {
@@ -81,10 +81,11 @@ export class Spawner {
                 Object.keys(PROBABILITY_WEIGHTS).forEach(assetKey => {
                     if (!assetPlaced && randomValue <= weightSum + PROBABILITY_WEIGHTS[assetKey]) {
                         assetPlaced = true;
-                        let yPosition = Math.random() * this.scene.canvas.height;
-                        while (yPosition > this.curveSetter.y - 100 && yPosition < this.curveSetter.y + 100) {
-                            yPosition = Math.random() * this.scene.canvas.height;
+                        let yPosition = this.getValidSpawnY();
+                        while (yPosition > this.curveSetter.y - 50 && yPosition < this.curveSetter.y + 50) {
+                            yPosition = this.getValidSpawnY();
                         }
+                        console.log(assetKey)
                         switch (assetKey) {
                             case BEAR:
                                 const bear = new Tracking(this.scene, this.scene.canvas.width, yPosition, BEAR, player);
@@ -101,8 +102,8 @@ export class Spawner {
                                 dynamicObstacles.add(cartman, true);
                                 break;
                             default: //static obstacles
-                                const newObstacle = staticObstacles.create(800, yPosition, assetKey, 0);
-                                newObstacle.displayHeight = getSizeWithPerspective(newObstacle.y, 40)
+                                const newObstacle = staticObstacles.create(this.scene.canvas.width, yPosition, assetKey, 0);
+                                newObstacle.displayHeight = this.scene.getSizeWithPerspective(newObstacle.y, 40)
                                 newObstacle.scaleX = newObstacle.scaleY;
                                 break;
                         }

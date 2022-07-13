@@ -5,7 +5,9 @@ import { CARTMAN, PORTAL, ROCK, SKIER, Spawner, STAR, TREE } from '../Spawner';
 import Player from '../Player';
 import { SCREEN_HEIGHT } from '../config';
 
-export default class Demo extends Phaser.Scene {
+export const SKI_TRAIL = 'ski-trail';
+
+export default class SkiFreeScene extends Phaser.Scene {
   public canvas: { height: number; width: number } = { height: 0, width: 0 };
   private ticks: number = 0;
   public gameOver: boolean = false;
@@ -13,6 +15,8 @@ export default class Demo extends Phaser.Scene {
   private spawner: Spawner | undefined;
   public cursors: Phaser.Types.Input.Keyboard.CursorKeys | undefined;
   public keydown: Phaser.Input.Keyboard.KeyboardPlugin | undefined;
+
+  public gameVelocity: number = -60
 
   constructor() {
     super('GameScene');
@@ -36,10 +40,13 @@ export default class Demo extends Phaser.Scene {
           this.scene.start("GameOverScene");
       }
     })
-    
   }
 
   private worldToTileUnit = (worldUnit: number) => worldUnit / 60;
+
+  public getSizeWithPerspective = (yPosition: number, baseSize: number) => baseSize / 2 * yPosition / this.canvas.height + baseSize / 2;
+
+  public getSkyHeight = () => this.canvas.height * 0.35;
 
   preload() {
     this.scale.refresh();
@@ -51,6 +58,7 @@ export default class Demo extends Phaser.Scene {
     this.load.image(PORTAL, 'http://labs.phaser.io/assets/sprites/mushroom.png')
     this.load.image(TREE, 'http://labs.phaser.io/assets/sprites/tree-european.png');
     this.load.image(ROCK, 'http://labs.phaser.io/assets/sprites/shinyball.png');
+    this.load.image(SKI_TRAIL, 'http://labs.phaser.io/assets/particles/blue.png');
     this.load.spritesheet(SKIER, 'assets/skier.png', { frameWidth: Player.WIDTH, frameHeight: Player.HEIGHT });
     this.load.image(CARTMAN, 'http://labs.phaser.io/assets/svg/cartman.svg');
     this.load.spritesheet('bear', 'assets/bear.png', { frameWidth: 200, frameHeight: 200 });
@@ -58,9 +66,8 @@ export default class Demo extends Phaser.Scene {
 
   create() {
     this.gameOver = false;
-    this.background = this.add.tileSprite(0, 0, this.canvas?.width ?? 0, SCREEN_HEIGHT, "background")
+    this.background = this.add.tileSprite(0, 0, this.canvas.width, SCREEN_HEIGHT, "background")
       .setOrigin(0)
-      .setScrollFactor(0, 1);
     this.player = new Player(this, 100, 450, SKIER);
     this.spawner = new Spawner(this);
 
@@ -99,10 +106,10 @@ export default class Demo extends Phaser.Scene {
   }
 
   update() {
-    console.log(this.gameOver)
-    this.ticks++;
     if (!this.gameOver) {
-      this.background && (this.background.tilePositionX -= this.worldToTileUnit(GAME_VELOCITY));
+      this.ticks++;
+      this.gameVelocity -= 0.05;
+      this.background && (this.background.tilePositionX -= this.worldToTileUnit(this.gameVelocity));
       const score = Math.floor(this.ticks / 10);
       this.registry.get('scoreText').setText('Score: ' + score);
     }
@@ -117,7 +124,15 @@ export default class Demo extends Phaser.Scene {
       if (typedChild.body.right <= 0) {
         this.staticObstacles?.remove(typedChild, true, true);
       } else {
-        typedChild.setVelocityX(GAME_VELOCITY)
+        typedChild.setVelocityX(this.gameVelocity)
+      }
+    });
+
+    // Dynamic obstacle trash collection
+    this.dynamicObstacles?.children.entries.forEach((child) => {
+      const typedChild = (child as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody);
+      if(typedChild.body.right <= 0) {
+        this.dynamicObstacles?.remove(typedChild, true, true);
       }
     });
 
