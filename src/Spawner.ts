@@ -1,4 +1,4 @@
-import { SCREEN_WIDTH, SCREEN_HEIGHT } from "./config";
+import { SCREEN_HEIGHT } from "./config";
 import Chasing from "./dynamicObstacles/Chasing";
 import Falling from "./dynamicObstacles/Falling";
 import Tracking from "./dynamicObstacles/Tracking";
@@ -41,6 +41,8 @@ const PROBABILITY_WEIGHTS = normalizeWeights({
     [BEAR]: 1,
     [CARTMAN]: 0.5,
 });
+
+export const getSizeWithPerspective = (yPosition: number, baseSize: number) => baseSize / 2 * yPosition / SCREEN_HEIGHT + baseSize / 2;
 
 export class Spawner {
 
@@ -85,22 +87,22 @@ export class Spawner {
                         }
                         switch (assetKey) {
                             case BEAR:
-                                const bear = new Tracking(this.scene, SCREEN_WIDTH, yPosition, BEAR, player);
+                                const bear = new Tracking(this.scene, this.scene.canvas.width, yPosition, BEAR, player);
                                 bear.body.setSize(32, 48);
                                 dynamicObstacles.add(bear, true);
                                 break;
                             case STAR:
-                                const star = new Falling(this.scene, SCREEN_WIDTH * (Math.random() + 1) / 2, 0, STAR)
+                                const star = new Falling(this.scene, this.scene.canvas.width * (Math.random() + 1) / 2, 0, STAR)
                                 dynamicObstacles.add(star, true);
                             case CARTMAN:
-                                const cartman = new Chasing(this.scene, SCREEN_WIDTH, Math.random() * SCREEN_HEIGHT, CARTMAN)
+                                const cartman = new Chasing(this.scene, this.scene.canvas.width, Math.random() * SCREEN_HEIGHT, CARTMAN)
                                 cartman.displayHeight = 30;
                                 cartman.scaleX = cartman.scaleY;
                                 dynamicObstacles.add(cartman, true);
                                 break;
                             default: //static obstacles
                                 const newObstacle = staticObstacles.create(800, yPosition, assetKey, 0);
-                                newObstacle.displayHeight = 40;
+                                newObstacle.displayHeight = getSizeWithPerspective(newObstacle.y, 40)
                                 newObstacle.scaleX = newObstacle.scaleY;
                                 break;
                         }

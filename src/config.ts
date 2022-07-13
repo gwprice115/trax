@@ -1,11 +1,11 @@
 import Phaser from 'phaser';
 
-export const SCREEN_WIDTH = 800;
-export const SCREEN_HEIGHT = 600;
+export const SCREEN_HEIGHT = 300;
+export const GAME_DOM_ID = "skifree-game"
 
 export const config = {
   type: Phaser.AUTO,
-  parent: 'game',
+  parent: GAME_DOM_ID,
   backgroundColor: '#33A5E7',
 
   physics: {
@@ -15,10 +15,7 @@ export const config = {
     }
   },
   scale: {
-    width: SCREEN_WIDTH,
-    height: SCREEN_HEIGHT,
-    mode: Phaser.Scale.FIT,
-    autoCenter: Phaser.Scale.CENTER_BOTH
+    parent: GAME_DOM_ID,
+    mode: Phaser.Scale.RESIZE,
   }
-
 };
