@@ -91,9 +91,8 @@ export default class Demo extends Phaser.Scene {
     this.load.image(PORTAL, 'http://labs.phaser.io/assets/sprites/mushroom.png')
     this.load.image(TREE, 'http://labs.phaser.io/assets/sprites/tree-european.png');
     this.load.image(ROCK, 'http://labs.phaser.io/assets/sprites/shinyball.png');
-    this.load.spritesheet(SKIER,
-      'assets/skier.png',
-    this.load.image(CARTMAN, 'http://labs.phaser.io/assets/svg/cartman.svg')
+    this.load.spritesheet(SKIER, 'assets/skier.png',{ frameWidth: this.PLAYER_WIDTH, frameHeight: this.PLAYER_HEIGHT });
+    this.load.image(CARTMAN, 'http://labs.phaser.io/assets/svg/cartman.svg');
     this.load.spritesheet('bear', 'assets/bear.png', { frameWidth: 200, frameHeight: 200 });
   }
 
@@ -158,7 +157,7 @@ export default class Demo extends Phaser.Scene {
             while (yPosition > curveSetter.y - 100 && yPosition < curveSetter.y + 100) {
               yPosition = Math.random() * (this.CANVAS?.height ?? 0);
             }
-            const newObstacle = this.staticObstacles.create(800, Math.random() * (this.CANVAS?.height ?? 0), assetKey, 0);
+            const newObstacle = this.staticObstacles?.create(800, yPosition, assetKey, 0);
             newObstacle.displayHeight = 40;
             newObstacle.scaleX = newObstacle.scaleY;
           } else {
@@ -183,16 +182,16 @@ export default class Demo extends Phaser.Scene {
               case BEAR:
                 const bear = new Tracking(this, SCREEN_WIDTH, player.body.y, BEAR, player);
                 bear.body.setSize(32, 48);
-                this.dynamicObstacles.add(bear, true);
+                this.dynamicObstacles?.add(bear, true);
                 break;
               case STAR:
                 const star = new Falling(this, SCREEN_WIDTH * (Math.random()+1)/2, 0, STAR)
-                this.dynamicObstacles.add(star, true);
+                this.dynamicObstacles?.add(star, true);
               case CARTMAN:
                 const cartman = new Chasing(this, SCREEN_WIDTH, Math.random() * SCREEN_HEIGHT, CARTMAN)
                 cartman.displayHeight = 30;
                 cartman.scaleX = cartman.scaleY;
-                this.dynamicObstacles.add(cartman, true);
+                this.dynamicObstacles?.add(cartman, true);
             }
           } else {
             weightSum += DYNAMIC_PROBABILITY_WEIGHTS[assetKey];
@@ -242,7 +241,7 @@ export default class Demo extends Phaser.Scene {
     this.staticObstacles?.children.entries.forEach((child) => {
       const typedChild = (child as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody);
       if (typedChild.body.right <= 0) {
-        this.staticObstacles.remove(typedChild, true, true);
+        this.staticObstacles?.remove(typedChild, true, true);
       } else {
         typedChild.setVelocityX(-100);
       }
