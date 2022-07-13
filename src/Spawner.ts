@@ -42,8 +42,6 @@ const PROBABILITY_WEIGHTS = normalizeWeights({
     [CARTMAN]: 0.5,
 });
 
-export const getSizeWithPerspective = (yPosition: number, baseSize: number) => baseSize / 2 * yPosition / SCREEN_HEIGHT + baseSize / 2;
-
 export class Spawner {
 
     private scene: Demo;
@@ -71,6 +69,8 @@ export class Spawner {
         }
     }
 
+    private getValidSpawnY = () => Math.random() * (this.scene.canvas.height - this.scene.getSkyHeight()) + this.scene.getSkyHeight();
+
     public maybeSpawnObstacle(ticks: number) {
         if (ticks % SPAWN_CHECK_RATE === 0 && Math.random() < PROBABILITY_OF_SPAWN) {
             const { staticObstacles, dynamicObstacles, player, gameOver } = this.scene;
@@ -81,10 +81,11 @@ export class Spawner {
                 Object.keys(PROBABILITY_WEIGHTS).forEach(assetKey => {
                     if (!assetPlaced && randomValue <= weightSum + PROBABILITY_WEIGHTS[assetKey]) {
                         assetPlaced = true;
-                        let yPosition = Math.random() * this.scene.canvas.height;
-                        while (yPosition > this.curveSetter.y - 100 && yPosition < this.curveSetter.y + 100) {
-                            yPosition = Math.random() * this.scene.canvas.height;
+                        let yPosition = this.getValidSpawnY();
+                        while (yPosition > this.curveSetter.y - 50 && yPosition < this.curveSetter.y + 50) {
+                            yPosition = this.getValidSpawnY();
                         }
+                        console.log(assetKey)
                         switch (assetKey) {
                             case BEAR:
                                 const bear = new Tracking(this.scene, this.scene.canvas.width, yPosition, BEAR, player);
@@ -101,8 +102,8 @@ export class Spawner {
                                 dynamicObstacles.add(cartman, true);
                                 break;
                             default: //static obstacles
-                                const newObstacle = staticObstacles.create(800, yPosition, assetKey, 0);
-                                newObstacle.displayHeight = getSizeWithPerspective(newObstacle.y, 40)
+                                const newObstacle = staticObstacles.create(this.scene.canvas.width, yPosition, assetKey, 0);
+                                newObstacle.displayHeight = this.scene.getSizeWithPerspective(newObstacle.y, 40)
                                 newObstacle.scaleX = newObstacle.scaleY;
                                 break;
                         }

@@ -21,9 +21,14 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 		if (!this.gameScene.gameOver) {
 			this.anims.play(this.texture, true);
 			if (this.gameScene.cursors?.up.isDown) {
-				this.setVelocityY(-Player.VELOCITY);
-				this.angle = -30;
-				this.setOffset(10, 35);
+				// sky bounds
+				if (this.y < this.gameScene.getSkyHeight()) {
+					this.setVelocityY(0)
+				} else {
+					this.setVelocityY(-Player.VELOCITY);
+					this.angle = -30;
+					this.setOffset(10, 35);
+				}
 			}
 			else if (this.gameScene.cursors?.down.isDown) {
 				this.setVelocityY(Player.VELOCITY);

@@ -13,6 +13,8 @@ export default class Demo extends Phaser.Scene {
   private spawner: Spawner | undefined;
   public cursors: Phaser.Types.Input.Keyboard.CursorKeys | undefined;
 
+  public gameVelocity: number = -60
+
   constructor() {
     super('GameScene');
   }
@@ -43,6 +45,10 @@ export default class Demo extends Phaser.Scene {
 
   private worldToTileUnit = (worldUnit: number) => worldUnit / 60;
 
+  public getSizeWithPerspective = (yPosition: number, baseSize: number) => baseSize / 2 * yPosition / this.canvas.height + baseSize / 2;
+
+  public getSkyHeight = () => this.canvas.height * 0.35;
+
   preload() {
     this.scale.refresh();
     this.canvas = this.game.canvas;
@@ -60,9 +66,8 @@ export default class Demo extends Phaser.Scene {
 
 
   create() {
-    this.background = this.add.tileSprite(0, 0, this.canvas?.width ?? 0, SCREEN_HEIGHT, "background")
+    this.background = this.add.tileSprite(0, 0, this.canvas.width, SCREEN_HEIGHT, "background")
       .setOrigin(0)
-      .setScrollFactor(0, 1);
     this.player = new Player(this, 100, 450, SKIER);
     this.spawner = new Spawner(this);
 
@@ -100,9 +105,10 @@ export default class Demo extends Phaser.Scene {
   }
 
   update() {
-    this.ticks++;
     if (!this.gameOver) {
-      this.background && (this.background.tilePositionX -= this.worldToTileUnit(GAME_VELOCITY));
+      this.ticks++;
+      this.gameVelocity -= 0.05;
+      this.background && (this.background.tilePositionX -= this.worldToTileUnit(this.gameVelocity));
       const score = Math.floor(this.ticks / 10);
       this.registry.get('scoreText').setText('Score: ' + score);
     }
@@ -117,7 +123,7 @@ export default class Demo extends Phaser.Scene {
       if (typedChild.body.right <= 0) {
         this.staticObstacles?.remove(typedChild, true, true);
       } else {
-        typedChild.setVelocityX(GAME_VELOCITY)
+        typedChild.setVelocityX(this.gameVelocity)
       }
     });
   }
