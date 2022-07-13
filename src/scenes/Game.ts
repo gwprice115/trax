@@ -3,7 +3,7 @@ import Phaser from 'phaser';
 export const GAME_VELOCITY = -60;
 import { CARTMAN, PORTAL, ROCK, SKIER, Spawner, STAR, TREE } from '../Spawner';
 import Player from '../Player';
-import { SCREEN_HEIGHT, SCREEN_WIDTH } from '../config';
+import { SCREEN_HEIGHT } from '../config';
 
 export default class Demo extends Phaser.Scene {
   public canvas: { height: number; width: number } = { height: 0, width: 0 };
@@ -44,6 +44,7 @@ export default class Demo extends Phaser.Scene {
   private worldToTileUnit = (worldUnit: number) => worldUnit / 60;
 
   preload() {
+    this.scale.refresh();
     this.canvas = this.game.canvas;
     this.load.image('sky', 'http://labs.phaser.io/assets/skies/sky4.png');
     this.load.image('ground', 'http://labs.phaser.io/assets/sprites/platform.png');
@@ -59,7 +60,7 @@ export default class Demo extends Phaser.Scene {
 
 
   create() {
-    this.background = this.add.tileSprite(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, "background")
+    this.background = this.add.tileSprite(0, 0, this.canvas?.width ?? 0, SCREEN_HEIGHT, "background")
       .setOrigin(0)
       .setScrollFactor(0, 1);
     this.player = new Player(this, 100, 450, SKIER);

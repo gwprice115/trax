@@ -1,4 +1,4 @@
-import { SCREEN_WIDTH, SCREEN_HEIGHT } from "./config";
+import { SCREEN_HEIGHT } from "./config";
 import Chasing from "./dynamicObstacles/Chasing";
 import Falling from "./dynamicObstacles/Falling";
 import Tracking from "./dynamicObstacles/Tracking";
@@ -87,15 +87,15 @@ export class Spawner {
                         }
                         switch (assetKey) {
                             case BEAR:
-                                const bear = new Tracking(this.scene, SCREEN_WIDTH, yPosition, BEAR, player);
+                                const bear = new Tracking(this.scene, this.scene.canvas.width, yPosition, BEAR, player);
                                 bear.body.setSize(32, 48);
                                 dynamicObstacles.add(bear, true);
                                 break;
                             case STAR:
-                                const star = new Falling(this.scene, SCREEN_WIDTH * (Math.random() + 1) / 2, 0, STAR)
+                                const star = new Falling(this.scene, this.scene.canvas.width * (Math.random() + 1) / 2, 0, STAR)
                                 dynamicObstacles.add(star, true);
                             case CARTMAN:
-                                const cartman = new Chasing(this.scene, SCREEN_WIDTH, Math.random() * SCREEN_HEIGHT, CARTMAN)
+                                const cartman = new Chasing(this.scene, this.scene.canvas.width, Math.random() * SCREEN_HEIGHT, CARTMAN)
                                 cartman.displayHeight = 30;
                                 cartman.scaleX = cartman.scaleY;
                                 dynamicObstacles.add(cartman, true);
