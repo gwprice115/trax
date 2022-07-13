@@ -6,6 +6,7 @@ import Player from '../Player';
 import { SCREEN_HEIGHT } from '../config';
 
 export const SKI_TRAIL = 'ski-trail';
+export const START_GAME_VELOCITY = -80;
 
 export default class SkiFreeScene extends Phaser.Scene {
   public canvas: { height: number; width: number } = { height: 0, width: 0 };
@@ -15,7 +16,7 @@ export default class SkiFreeScene extends Phaser.Scene {
   private spawner: Spawner | undefined;
   public cursors: Phaser.Types.Input.Keyboard.CursorKeys | undefined;
 
-  public gameVelocity: number = -60
+  public gameVelocity: number = START_GAME_VELOCITY;
 
   constructor() {
     super('GameScene');
@@ -29,6 +30,8 @@ export default class SkiFreeScene extends Phaser.Scene {
   private hitObstacle = (player: Phaser.Types.Physics.Arcade.GameObjectWithBody, obstacle: Phaser.Types.Physics.Arcade.GameObjectWithBody) => {
     this.physics.pause();
     this.gameOver = true;
+    this.gameVelocity = START_GAME_VELOCITY;
+    this.ticks = 0;
     (player as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody).setTint(0xff0000);
     this.time.addEvent({
       delay: 1000,
