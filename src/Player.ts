@@ -31,20 +31,20 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 	update() {
 		if (!this.gameScene.gameOver) {
 			this.anims.play(this.texture, true);
-			this.skiTrailEmitter.setPosition(this.x, this.y + 30);
+			this.skiTrailEmitter.setPosition(this.x, this.y + 20);
 			if (this.gameScene.cursors?.up.isDown) {
 				// sky bounds
 				if (this.y < this.gameScene.getSkyHeight()) {
 					this.setVelocityY(0)
 				} else {
 					this.setVelocityY(-Player.VELOCITY);
-					// this.angle = -30;
+					this.angle = -15;
 					this.setOffset(10, 35);
 				}
 			}
 			else if (this.gameScene.cursors?.down.isDown) {
 				this.setVelocityY(Player.VELOCITY);
-				// this.angle = 30;
+				this.angle = 15;
 				this.setOffset(-12, 65);
 			}
 			else {

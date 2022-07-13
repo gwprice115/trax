@@ -113,7 +113,7 @@ export default class SkiFreeScene extends Phaser.Scene {
   update() {
     if (!this.gameOver) {
       this.ticks++;
-      this.gameVelocity -= 0.075;
+      this.gameVelocity -= 0.1;
       this.background && (this.background.tilePositionX -= this.worldToTileUnit(this.gameVelocity));
       const score = Math.floor(this.ticks / 10);
       this.registry.get('scoreText').setText('Score: ' + score);
