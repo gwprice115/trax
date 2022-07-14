@@ -137,7 +137,7 @@ export default class SkiFreeScene extends Phaser.Scene {
     if (this.start) return;
 
     this.instructions = this.add.image(this.canvas.width / 2, SCREEN_HEIGHT / 3 + 10, 'instructions')
-    this.start = this.add.image(this.canvas.width / 2, SCREEN_HEIGHT / 2 + 10, 'start').setInteractive()
+    this.start = this.add.image(this.canvas.width / 2, SCREEN_HEIGHT / 2 + 10, 'start').setInteractive({ cursor: "pointer" })
       .on('pointerover', () => { this.start?.setTexture('startHover') })
       .on('pointerout', () => { this.start?.setTexture('start') })
       .on('pointerup', () => {
@@ -152,7 +152,7 @@ export default class SkiFreeScene extends Phaser.Scene {
     if (this.gameOver) return;
     // create tryAgain button
     this.gameOver = this.add.image(this.canvas.width / 2, SCREEN_HEIGHT / 2, 'gameOver');
-    this.tryAgain = this.add.image(this.canvas.width / 2, SCREEN_HEIGHT / 2 + 35, 'tryAgain').setInteractive()
+    this.tryAgain = this.add.image(this.canvas.width / 2, SCREEN_HEIGHT / 2 + 35, 'tryAgain').setInteractive({ cursor: "pointer" })
       .on('pointerover', () => { this.tryAgain?.setTexture('tryAgainHover') })
       .on('pointerout', () => { this.tryAgain?.setTexture('tryAgain') })
       .on('pointerup', () => {
