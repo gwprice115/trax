@@ -11,7 +11,8 @@ export const START_GAME_VELOCITY = -80;
 export const enum GameStates {
   Instructions,
   PlayGame,
-  GameOver
+  GameOver,
+  Leaderboard
 }
 
 export default class SkiFreeScene extends Phaser.Scene {
@@ -25,6 +26,8 @@ export default class SkiFreeScene extends Phaser.Scene {
   public tryAgain: Phaser.GameObjects.Image | undefined;
   public instructions: Phaser.GameObjects.Image | undefined;
   public start: Phaser.GameObjects.Image | undefined;
+
+  public scoreBitmapText: Phaser.GameObjects.BitmapText|undefined;
 
   public gameVelocity: number = START_GAME_VELOCITY;
 
@@ -62,7 +65,7 @@ export default class SkiFreeScene extends Phaser.Scene {
     this.staticObstacles?.clear(true, true);
     this.dynamicObstacles?.clear(true, true);
     this.player?.destruct();
-    this.registry.get('scoreText')?.destroy();
+    this.scoreBitmapText?.destroy();
   }
 
   public createGameElements = () => {
@@ -84,12 +87,8 @@ export default class SkiFreeScene extends Phaser.Scene {
       this.physics.add.overlap(this.player, this.staticObstacles, this.hitObstacle, undefined, this);
       this.physics.add.overlap(this.player, this.dynamicObstacles, this.hitObstacle, undefined, this);
     }
-
-
     // load score text
-    const scoreText = this.add.text(16, 16, 'score: 0', { fontSize: '20px', color: '#000' });
-    this.registry.set('scoreText', scoreText);
-    scoreText.setDepth(1)
+    this.scoreBitmapText = this.add.bitmapText(16, 16, "arcadeFont", "Score: 0", 20).setTint(0x000000)
   }
 
   public createAnimations = () => {
@@ -198,6 +197,17 @@ export default class SkiFreeScene extends Phaser.Scene {
     this.load.spritesheet(SKIER, 'assets/skier.png', { frameWidth: Player.WIDTH, frameHeight: Player.HEIGHT });
     this.load.spritesheet(WOLF, 'assets/running_wolf_sprite.png', { frameWidth: 563, frameHeight: 265 });
     this.load.spritesheet(BEAR, 'assets/bear.png', { frameWidth: 200, frameHeight: 200 });
+    
+    //Leaderboard stuff
+    this.load.image("block", "assets/block.png");
+    this.load.image("rub", "assets/rub.png");
+    this.load.image("end", "assets/end.png");
+
+    this.load.bitmapFont(
+      "arcadeFont",
+      "assets/arcade.png",
+      "assets/arcade.xml"
+    );
   }
 
   create() {
@@ -235,7 +245,7 @@ export default class SkiFreeScene extends Phaser.Scene {
         this.ticks++;
         this.gameVelocity -= 0.1;
         const score = Math.floor(this.ticks / 10);
-        this.registry.get('scoreText').setText('Score: ' + score);
+        this.scoreBitmapText?.setText('Score: ' + score);
         this.player?.update();
         this.spawner?.updateCurveSetter(this.ticks);
         this.spawner?.maybeSpawnObstacle(this.ticks);
@@ -258,6 +268,10 @@ export default class SkiFreeScene extends Phaser.Scene {
         break;
       case GameStates.GameOver:
         this.createGameOver();
+        // this.scene.start()
+        break;
+      case GameStates.Leaderboard:
+        // TODO: Add logic for putting leaderboard
         break;
     }
   }
