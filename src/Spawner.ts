@@ -121,6 +121,7 @@ export class Spawner {
                             case SNOWMAN:
                                 const snowman = new Falling(this.scene, spawn_plane * (Math.random() + 1) / 2, 0, SNOWMAN)
                                 dynamicObstacles.add(snowman, true);
+                                break;
                             case WOLF:
                                 const wolf = new Chasing(this.scene, spawn_plane, yPosition, WOLF)
                                 dynamicObstacles.add(wolf, true);
