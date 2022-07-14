@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 
 export const GAME_VELOCITY = -60;
-import { WOLF, PORTAL, LITTLE_ROCK, BIG_ROCK, SKIER, Spawner, TREE, SNOWMAN, BEAR, DINOSAUR } from '../Spawner';
+import { WOLF, PORTAL, LITTLE_ROCK, BIG_ROCK, SKIER, Spawner, TREE, SNOWMAN, BEAR, DINOSAUR, TREE_SNOWY_1, TREE_SNOWY_2, STICK, STONE, STONE2, TREE_TRUNK, HOUSE, TREE_EMPTY_1, TREE_EMPTY_2 } from '../Spawner';
 import Player from '../Player';
 import { SCREEN_HEIGHT } from '../config';
 
@@ -58,10 +58,19 @@ export default class SkiFreeScene extends Phaser.Scene {
     this.load.image('bg_mtn', 'assets/bg_mtn.png')
     this.load.image('bg_sky', 'assets/bg_sky.png')
     this.load.image('bg_snow', 'assets/bg_snow.png')
+    this.load.image(HOUSE, 'assets/house.png');
     this.load.image(SNOWMAN, 'assets/snowman.png');
     this.load.image(PORTAL, 'http://labs.phaser.io/assets/sprites/mushroom.png')
     this.load.image(SKI_TRAIL, 'http://labs.phaser.io/assets/particles/blue.png');
-    this.load.image(TREE, 'assets/tree_snowy1.png');
+    this.load.image(STICK, 'assets/stick.png');
+    this.load.image(STONE, 'assets/stone.png');
+    this.load.image(STONE2, 'assets/stone2.png');
+    this.load.image(TREE_EMPTY_1, 'assets/tree_empty1.png');
+    this.load.image(TREE_EMPTY_2, 'assets/tree_empty2.png');
+    this.load.image(TREE_SNOWY_1, 'assets/tree_snowy1.png');
+    this.load.image(TREE_SNOWY_2, 'assets/tree_snowy2.png');
+    this.load.image(TREE_TRUNK, 'assets/tree_trunk.png');
+    this.load.image(TREE, 'assets/tree.png');
     this.load.image(LITTLE_ROCK, 'assets/rock_little.png');
     this.load.image(BIG_ROCK, 'assets/rock_big.png');
     this.load.spritesheet(DINOSAUR, 'assets/dinosaur.png', { frameWidth: 100, frameHeight: 100 });

@@ -9,6 +9,15 @@ import { getNoiseFunction } from "./utils/utils";
 
 
 export const TREE = 'tree';
+export const TREE_SNOWY_1 = 'tree_snowy1';
+export const TREE_SNOWY_2 = 'tree_snowy2';
+export const STICK = 'stick';
+export const STONE = 'stone';
+export const STONE2 = 'stone2';
+export const TREE_TRUNK = 'tree_trunk';
+export const TREE_EMPTY_1 = 'tree_empty1';
+export const TREE_EMPTY_2 = 'tree_empty2';
+export const HOUSE = 'house';
 export const ROCK = 'rock';
 export const BIG_ROCK = 'big_rock'
 export const LITTLE_ROCK = 'little_rock'
@@ -40,7 +49,16 @@ function normalizeWeights(weights: Record<string, number>): Record<string, numbe
 const PROBABILITY_WEIGHTS = normalizeWeights({
     [LITTLE_ROCK]: 5,
     [BIG_ROCK]: 3,
-    [TREE]: 10,
+    [HOUSE]: 5,
+    [STICK]: 5,
+    [STONE]: 5,
+    [STONE2]: 5,
+    [TREE_EMPTY_1]: 5,
+    [TREE_EMPTY_2]: 5,
+    [TREE_SNOWY_1]: 10,
+    [TREE_SNOWY_2]: 10,
+    [TREE]: 5,
+    [TREE_TRUNK]: 2,
     [PORTAL]: 0,
     [SNOWMAN]: 3,
     [BEAR]: 2,
