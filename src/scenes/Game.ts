@@ -8,14 +8,21 @@ import { SCREEN_HEIGHT } from '../config';
 export const SKI_TRAIL = 'ski-trail';
 export const START_GAME_VELOCITY = -80;
 
+export const enum GameStates {
+  Instructions,
+  PlayGame,
+  GameOver
+}
+
 export default class SkiFreeScene extends Phaser.Scene {
   public canvas: { height: number; width: number } = { height: 0, width: 0 };
   private ticks: number = 0;
-  public gameOver: boolean = false;
+  // public gameOver: boolean = false;
+  public gameState: GameStates | undefined;
   public player: Player | undefined;
   private spawner: Spawner | undefined;
   public cursors: Phaser.Types.Input.Keyboard.CursorKeys | undefined;
-  public tryAgain: Phaser.Physics.Arcade.Image | undefined;
+  public tryAgain: Phaser.GameObjects.Image | undefined;
 
   public gameVelocity: number = START_GAME_VELOCITY;
 
@@ -34,24 +41,33 @@ export default class SkiFreeScene extends Phaser.Scene {
 
   private hitObstacle = (player: Phaser.Types.Physics.Arcade.GameObjectWithBody, obstacle: Phaser.Types.Physics.Arcade.GameObjectWithBody) => {
     this.physics.pause();
-    this.gameOver = true;
+    // this.gameOver = true;
+    this.gameState = GameStates.GameOver;
     this.gameVelocity = START_GAME_VELOCITY;
     this.ticks = 0;
     (player as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody).setTint(0xff0000);
-    this.time.addEvent({
-      delay: 1000,
-      loop: false,
-      callback: () => {
-        // this.scene.start("GameOverScene");
-      }
-    })
+    // this.time.addEvent({
+    //   delay: 1000,
+    //   loop: false,
+    //   callback: () => {
+    //     // this.scene.start("GameOverScene");
+    //   }
+    // })
+    this.staticObstacles?.clear();
+    this.dynamicObstacles?.clear();
   }
 
-  private worldToTileUnit = (worldUnit: number) => worldUnit / 120;
+  private worldToTileUnit = (worldUnit: number) => worldUnit / 150;
 
   public getSizeWithPerspective = (yPosition: number, baseSize: number) => (baseSize * 0.3 * yPosition / this.canvas.height) + (baseSize * 0.7);
 
   public getSkyHeight = () => this.canvas.height * 0.38;
+
+  public restartGame = () => {
+    console.log('clicked button')
+    this.gameState === GameStates.PlayGame
+    this.physics.resume();
+  };
 
   preload() {
     this.scale.refresh();
@@ -63,6 +79,7 @@ export default class SkiFreeScene extends Phaser.Scene {
     this.load.image(PORTAL, 'http://labs.phaser.io/assets/sprites/mushroom.png')
     this.load.image(SKI_TRAIL, 'http://labs.phaser.io/assets/particles/blue.png');
     this.load.image(TREE, 'assets/tree_snowy1.png');
+    this.load.image('gameOverHover', 'assets/game-over-hover.png')
     this.load.image(LITTLE_ROCK, 'assets/rock_little.png');
     this.load.image(BIG_ROCK, 'assets/rock_big.png');
     this.load.image('tryAgain', 'assets/game-over.png');
@@ -73,18 +90,24 @@ export default class SkiFreeScene extends Phaser.Scene {
   }
 
   create() {
-    this.gameOver = false;
+    // this.gameOver = false;
+    this.gameState = GameStates.PlayGame;
     this.bg_sky = this.add.tileSprite(0, 0, this.canvas.width, SCREEN_HEIGHT, "bg_sky")
       .setOrigin(0)
     this.bg_mtn = this.add.tileSprite(0, 0, this.canvas.width, SCREEN_HEIGHT, "bg_mtn")
       .setOrigin(0)
     this.bg_snow = this.add.tileSprite(0, 0, this.canvas.width, SCREEN_HEIGHT, "bg_snow")
       .setOrigin(0)
-
-    console.log(this.bg_sky, this.bg_mtn, this.bg_snow)
     this.player = new Player(this, 100, 450, SKIER);
     this.spawner = new Spawner(this);
+
     this.tryAgain = this.add.image(this.canvas.width / 2, SCREEN_HEIGHT / 2, 'tryAgain').setInteractive();
+    let tryAgainButton = this.add.image(this.canvas.width / 2, SCREEN_HEIGHT / 2, 'tryAgain').setInteractive()
+      .on('pointerover', () => { tryAgainButton.setTexture('gameOverHover') })
+      .on('pointerout', () => { tryAgainButton.setTexture('tryAgain') })
+      .on('pointerup', () => { this.restartGame()})
+      ;
+    // this.tryAgain?.once('pointerup', this.restartGame, this);
     this.tryAgain?.setDepth(-1);
 
     // set up static and dynamic obstacle groups
@@ -136,16 +159,17 @@ export default class SkiFreeScene extends Phaser.Scene {
   }
 
   update() {
-    if (!this.gameOver) {
+    console.log(this.gameState)
+    if (this.gameState === GameStates.PlayGame) {
       this.ticks++;
       this.gameVelocity -= 0.1;
       this.bg_snow && (this.bg_snow.tilePositionX -= this.worldToTileUnit(this.gameVelocity));
       this.bg_mtn && (this.bg_mtn.tilePositionX -= this.worldToTileUnit(0.9 * this.gameVelocity));
-      this.bg_sky && (this.bg_sky.tilePositionX -= this.worldToTileUnit(0.6 * this.gameVelocity));
+      this.bg_sky && (this.bg_sky.tilePositionX -= this.worldToTileUnit(0.6 * this.gameVelocity));      
       const score = Math.floor(this.ticks / 10);
       this.registry.get('scoreText').setText('Score: ' + score);
-    } else {
-      this.tryAgain?.setDepth(2)
+    } else if (this.gameState === GameStates.GameOver) {
+      // this.tryAgain?.setDepth(2);
     }
 
     this.player?.update();

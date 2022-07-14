@@ -1,5 +1,5 @@
 import Phaser from 'phaser'
-import SkiFreeScene, { SKI_TRAIL } from './scenes/Game';
+import SkiFreeScene, { SKI_TRAIL, GameStates } from './scenes/Game';
 
 export default class Player extends Phaser.Physics.Arcade.Sprite {
 
@@ -29,7 +29,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 	}
 
 	update() {
-		if (!this.gameScene.gameOver) {
+		if (this.gameScene.gameState === GameStates.PlayGame) {
 			this.anims.play(this.texture, true);
 			this.skiTrailEmitter.setPosition(this.x, this.y + 20);
 			if (this.gameScene.cursors?.up.isDown) {

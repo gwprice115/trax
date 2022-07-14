@@ -1,9 +1,10 @@
+import { Game } from "phaser";
 import { SCREEN_HEIGHT } from "./config";
 import Chasing from "./dynamicObstacles/Chasing";
 import Falling from "./dynamicObstacles/Falling";
 import Tracking from "./dynamicObstacles/Tracking";
 import Player from "./Player";
-import SkiFreeScene from "./scenes/Game";
+import SkiFreeScene, {GameStates} from "./scenes/Game";
 import { getNoiseFunction } from "./utils/utils";
 
 
@@ -79,8 +80,8 @@ export class Spawner {
 
     public maybeSpawnObstacle(ticks: number) {
         if (ticks % SPAWN_CHECK_RATE === 0 && Math.random() < PROBABILITY_OF_SPAWN) {
-            const { staticObstacles, dynamicObstacles, player, gameOver } = this.scene;
-            if (!gameOver && staticObstacles != null && dynamicObstacles != null && player != null) {
+            const { staticObstacles, dynamicObstacles, player, gameState } = this.scene;
+            if (gameState === GameStates.PlayGame && staticObstacles != null && dynamicObstacles != null && player != null) {
                 let weightSum = 0;
                 let assetPlaced = false;
                 const randomValue = Math.random();
@@ -91,7 +92,7 @@ export class Spawner {
                         while (yPosition > this.curveSetter.y - 60 && yPosition < this.curveSetter.y + 60) {
                             yPosition = this.getValidSpawnY();
                         }
-                        console.log(assetKey)
+                        // console.log(assetKey)
                         switch (assetKey) {
                             case BEAR:
                                 const bear = new Tracking(this.scene, this.scene.canvas.width, yPosition, BEAR, player);
