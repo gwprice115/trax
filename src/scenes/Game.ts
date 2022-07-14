@@ -8,12 +8,15 @@ import { SCREEN_HEIGHT } from '../config';
 export const SKI_TRAIL = 'ski-trail';
 export const START_GAME_VELOCITY = -80;
 
+const SNOWFLAKES = 'snowflakes';
+
 export default class SkiFreeScene extends Phaser.Scene {
   public canvas: { height: number; width: number } = { height: 0, width: 0 };
   private ticks: number = 0;
   public gameOver: boolean = false;
   public player: Player | undefined;
   private spawner: Spawner | undefined;
+  private snowflakeEmitter: Phaser.GameObjects.Particles.ParticleEmitter | undefined;
   public cursors: Phaser.Types.Input.Keyboard.CursorKeys | undefined;
 
   public gameVelocity: number = START_GAME_VELOCITY;
@@ -73,6 +76,7 @@ export default class SkiFreeScene extends Phaser.Scene {
     this.load.image(TREE, 'assets/tree.png');
     this.load.image(LITTLE_ROCK, 'assets/rock_little.png');
     this.load.image(BIG_ROCK, 'assets/rock_big.png');
+    this.load.spritesheet(SNOWFLAKES, 'http://labs.phaser.io/assets/sprites/snowflakes.png', { frameWidth: 17, frameHeight: 17 });
     this.load.spritesheet(DINOSAUR, 'assets/dinosaur.png', { frameWidth: 100, frameHeight: 100 });
     this.load.spritesheet(SKIER, 'assets/skier.png', { frameWidth: Player.WIDTH, frameHeight: Player.HEIGHT });
     this.load.spritesheet(WOLF, 'assets/running_wolf_sprite.png', { frameWidth: 563, frameHeight: 265 });
@@ -87,6 +91,8 @@ export default class SkiFreeScene extends Phaser.Scene {
       .setOrigin(0)
     this.bg_snow = this.add.tileSprite(0, 0, this.canvas.width, SCREEN_HEIGHT, "bg_snow")
       .setOrigin(0)
+
+    const topOfCanvas = new Phaser.Geom.Line(0, 0, this.canvas.width * 2, 0);
 
     console.log(this.bg_sky, this.bg_mtn, this.bg_snow)
     this.player = new Player(this, 100, 450, SKIER);
@@ -137,7 +143,14 @@ export default class SkiFreeScene extends Phaser.Scene {
     // load score text
     const scoreText = this.add.text(16, 16, 'score: 0', { fontSize: '12px', color: '#000' });
     this.registry.set('scoreText', scoreText);
-    scoreText.setDepth(1)
+    scoreText.setDepth(1);
+
+    this.snowflakeEmitter = this.add.particles(SNOWFLAKES).setDepth(10000).createEmitter({
+      name: 'snowflakeEmitter',
+      gravityY: 10,
+      emitZone: { type: 'random', source: topOfCanvas },
+      lifespan: 10000,
+    }).setScale(0.5);
   }
 
   update() {
@@ -170,5 +183,13 @@ export default class SkiFreeScene extends Phaser.Scene {
         this.dynamicObstacles?.remove(typedChild, true, true);
       }
     });
+    const { snowflakeEmitter } = this;
+    if (snowflakeEmitter) {
+      snowflakeEmitter.setFrame(Math.floor(6 * Math.random()));
+      snowflakeEmitter.setSpeedX(this.gameVelocity);
+      if (this.gameOver) {
+        snowflakeEmitter.pause();
+      }
+    }
   }
 }
