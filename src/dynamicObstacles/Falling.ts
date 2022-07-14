@@ -21,8 +21,8 @@ export default class Falling extends Phaser.Physics.Arcade.Sprite
     }
 
     private fall() {
-        this.setVelocityX(this.gameScene.gameVelocity * 3);
-        this.setVelocityY(Math.random() * 200 + 50)
+        this.setVelocityX(this.gameScene.gameVelocity - 200);
+        this.setVelocityY(-this.gameScene.gameVelocity + 50)
     }
 
 	update() {

@@ -36,7 +36,8 @@ export default class SkiFreeScene extends Phaser.Scene {
 
   private bg_snow?: Phaser.GameObjects.TileSprite;
   private bg_sky?: Phaser.GameObjects.TileSprite;
-  private bg_mtn?: Phaser.GameObjects.TileSprite;
+  private bg_mtnnear?: Phaser.GameObjects.TileSprite;
+  private bg_mtnfar?: Phaser.GameObjects.TileSprite;
 
   public staticObstacles?: Phaser.Physics.Arcade.Group;
   public dynamicObstacles?: Phaser.Physics.Arcade.Group;
@@ -47,6 +48,7 @@ export default class SkiFreeScene extends Phaser.Scene {
     this.gameVelocity = START_GAME_VELOCITY;
     this.ticks = 0;
     (player as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody).setTint(0xff0000);
+    (obstacle as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody).setTint(0xff0000);
   }
 
   private worldToTileUnit = (worldUnit: number) => worldUnit / 120;
@@ -121,6 +123,7 @@ export default class SkiFreeScene extends Phaser.Scene {
   }
 
   public initGame = (state: GameStates) => {
+    console.log("initializing")
     this.ticks = 0;
     this.gameVelocity = START_GAME_VELOCITY;
     this.gameState = state;
@@ -154,13 +157,12 @@ export default class SkiFreeScene extends Phaser.Scene {
       .on('pointerover', () => { this.tryAgain?.setTexture('tryAgainHover') })
       .on('pointerout', () => { this.tryAgain?.setTexture('tryAgain') })
       .on('pointerup', () => {
-        this.initGame(GameStates.PlayGame);
         this.gameOver?.destroy();
         this.gameOver = undefined;
         this.tryAgain?.destroy();
         this.tryAgain = undefined;
-      })
-      ;
+        this.initGame(GameStates.PlayGame);
+      });
     this.gameOver?.setDepth(1);
     this.tryAgain?.setDepth(2);
   }
@@ -174,7 +176,8 @@ export default class SkiFreeScene extends Phaser.Scene {
     this.load.image('start', 'assets/start.png')
     this.load.image('startHover', 'assets/start-hover.png')
     this.load.image('instructions', 'assets/instructions.png')
-    this.load.image('bg_mtn', 'assets/bg_mtn.png')
+    this.load.image('bg_mtnnear', 'assets/bg_mtnnear.png')
+    this.load.image('bg_mtnfar', 'assets/bg_mtnfar.png')
     this.load.image('bg_sky', 'assets/bg_sky.png')
     this.load.image('bg_snow', 'assets/bg_snow.png')
     this.load.image(HOUSE, 'assets/house.png');
@@ -203,11 +206,12 @@ export default class SkiFreeScene extends Phaser.Scene {
   create() {
     this.bg_sky = this.add.tileSprite(0, 0, this.canvas.width, SCREEN_HEIGHT, "bg_sky")
       .setOrigin(0)
-    this.bg_mtn = this.add.tileSprite(0, 0, this.canvas.width, SCREEN_HEIGHT, "bg_mtn")
+    this.bg_mtnfar = this.add.tileSprite(0, 0, this.canvas.width, SCREEN_HEIGHT, "bg_mtnfar")
+      .setOrigin(0)
+    this.bg_mtnnear = this.add.tileSprite(0, 0, this.canvas.width, SCREEN_HEIGHT, "bg_mtnnear")
       .setOrigin(0)
     this.bg_snow = this.add.tileSprite(0, 0, this.canvas.width, SCREEN_HEIGHT, "bg_snow")
       .setOrigin(0)
-
 
     this.createAnimations();
     this.gameState = GameStates.Instructions;
@@ -217,8 +221,9 @@ export default class SkiFreeScene extends Phaser.Scene {
 
   private moveBackground = () => {
     this.bg_snow && (this.bg_snow.tilePositionX -= this.worldToTileUnit(this.gameVelocity));
-    this.bg_mtn && (this.bg_mtn.tilePositionX -= this.worldToTileUnit(0.9 * this.gameVelocity));
-    this.bg_sky && (this.bg_sky.tilePositionX -= this.worldToTileUnit(0.6 * this.gameVelocity));
+    this.bg_mtnnear && (this.bg_mtnnear.tilePositionX -= this.worldToTileUnit(0.9 * this.gameVelocity));
+    this.bg_mtnfar && (this.bg_mtnfar.tilePositionX -= this.worldToTileUnit(0.7 * this.gameVelocity));
+    this.bg_sky && (this.bg_sky.tilePositionX -= this.worldToTileUnit(0.5 * this.gameVelocity));
   }
 
   update() {
@@ -228,6 +233,7 @@ export default class SkiFreeScene extends Phaser.Scene {
         this.createStartMenu();
         break;
       case GameStates.PlayGame:
+        console.log(this)
         this.moveBackground();
         this.ticks++;
         this.gameVelocity -= 0.1;
