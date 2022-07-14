@@ -123,7 +123,6 @@ export default class SkiFreeScene extends Phaser.Scene {
   }
 
   public initGame = (state: GameStates) => {
-    console.log("initializing")
     this.ticks = 0;
     this.gameVelocity = START_GAME_VELOCITY;
     this.gameState = state;
@@ -184,7 +183,6 @@ export default class SkiFreeScene extends Phaser.Scene {
     this.load.image(SNOWMAN, 'assets/snowman.png');
     this.load.image(PORTAL, 'http://labs.phaser.io/assets/sprites/mushroom.png')
     this.load.image(SKI_TRAIL, 'http://labs.phaser.io/assets/particles/blue.png');
-    this.load.image('gameOverHover', 'assets/game-over-hover.png')
     this.load.image(STICK, 'assets/stick.png');
     this.load.image(STONE, 'assets/stone.png');
     this.load.image(STONE2, 'assets/stone2.png');
@@ -196,7 +194,6 @@ export default class SkiFreeScene extends Phaser.Scene {
     this.load.image(TREE, 'assets/tree.png');
     this.load.image(LITTLE_ROCK, 'assets/rock_little.png');
     this.load.image(BIG_ROCK, 'assets/rock_big.png');
-    this.load.image('tryAgain', 'assets/game-over.png');
     this.load.spritesheet(DINOSAUR, 'assets/dinosaur.png', { frameWidth: 100, frameHeight: 100 });
     this.load.spritesheet(SKIER, 'assets/skier.png', { frameWidth: Player.WIDTH, frameHeight: Player.HEIGHT });
     this.load.spritesheet(WOLF, 'assets/running_wolf_sprite.png', { frameWidth: 563, frameHeight: 265 });
@@ -233,7 +230,6 @@ export default class SkiFreeScene extends Phaser.Scene {
         this.createStartMenu();
         break;
       case GameStates.PlayGame:
-        console.log(this)
         this.moveBackground();
         this.ticks++;
         this.gameVelocity -= 0.1;
