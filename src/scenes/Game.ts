@@ -148,6 +148,7 @@ export default class SkiFreeScene extends Phaser.Scene {
     this.snowflakeEmitter = this.add.particles(SNOWFLAKES).setDepth(10000).createEmitter({
       name: 'snowflakeEmitter',
       gravityY: 10,
+      //@ts-ignore
       emitZone: { type: 'random', source: topOfCanvas },
       lifespan: 10000,
     }).setScale(0.5);
