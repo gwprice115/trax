@@ -16,6 +16,7 @@ export default class Tracking extends Phaser.Physics.Arcade.Sprite
 
 		this.displayHeight = this.height * 0.8;
 		this.scaleX = this.scaleY;
+		this.setSize(this.width * 0.1, this.height * 0.15);
 	}
 
 	private trackPlayer() {
@@ -24,7 +25,7 @@ export default class Tracking extends Phaser.Physics.Arcade.Sprite
 
 		const rotationAngle = Phaser.Math.Angle.Between(playerX, playerY, this.x, this.y)
 		this.setRotation(rotationAngle);
-		this.setVelocityX(this.gameScene.gameVelocity * 2)
+		this.setVelocityX(this.gameScene.gameVelocity - 100)
 
 		// slow down Y velocity when bear gets close to player to make bear less deadly
 		if (this.x > playerX + 300) {

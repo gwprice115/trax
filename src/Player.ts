@@ -22,8 +22,8 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 		scene.add.existing(this);
 		scene.physics.add.existing(this);
 
-		this.setSize(this.width * 0.3, this.height * 0.7)
-		this.setOffset(this.width / 3, this.height * 0.2)
+		this.setSize(this.width * 0.3, this.height * 0.5)
+		this.setOffset(this.width / 3, this.height * 0.4)
 		this.displayHeight = Player.DISPLAY_HEIGHT;
 		this.scaleX = this.scaleY;
 
@@ -42,15 +42,18 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 				} else {
 					this.setVelocityY(-Player.VELOCITY);
 					this.angle = -15;
+					this.setOffset(this.width * 0.3, this.height * 0.2)
 				}
 			}
 			else if (this.gameScene.cursors?.down.isDown) {
 				this.setVelocityY(Player.VELOCITY);
 				this.angle = 15;
+				this.setOffset(this.width * 0.5, this.height * 0.6)
 			}
 			else {
 				this.setVelocityY(0);
 				this.angle = 0;
+				this.setOffset(this.width * 0.4, this.height * 0.4)
 			}
 			this.displayHeight = this.gameScene.getSizeWithPerspective(this.y, Player.DISPLAY_HEIGHT)
 			const scaleFactor = this.scaleY;

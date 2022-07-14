@@ -16,7 +16,7 @@ export default class Chasing extends Phaser.Physics.Arcade.Sprite
 			case WOLF:
 				this.displayHeight = 32
 				this.scaleX = this.scaleY;
-				this.setSize(this.width * 0.9, this.height * 0.5);
+				this.setSize(this.width * 0.8, this.height * 0.4);
 				break;
 			default:
 				console.error(`Chaser ${this} was not actually a chaser lmfao`)
@@ -24,7 +24,7 @@ export default class Chasing extends Phaser.Physics.Arcade.Sprite
 	}
 
     private chase() {
-        this.setVelocityX(this.gameScene.gameVelocity - 100);
+        this.setVelocityX(this.gameScene.gameVelocity - 200);
     }
 
 	update() {
