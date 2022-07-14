@@ -2,6 +2,7 @@ import { SCREEN_HEIGHT } from "./config";
 import Chasing from "./dynamicObstacles/Chasing";
 import Falling from "./dynamicObstacles/Falling";
 import Tracking from "./dynamicObstacles/Tracking";
+import StaticObstacle from "./StaticObstacle";
 import Player from "./Player";
 import SkiFreeScene from "./scenes/Game";
 import { getNoiseFunction } from "./utils/utils";
@@ -109,9 +110,8 @@ export class Spawner {
                                 dynamicObstacles.add(wolf, true);
                                 break;
                             default: //static obstacles
-                                const newObstacle = staticObstacles.create(this.scene.canvas.width, yPosition, assetKey, 0);
-                                newObstacle.displayHeight = this.scene.getSizeWithPerspective(newObstacle.y, newObstacle.height)
-                                newObstacle.scaleX = newObstacle.scaleY;
+                                const staticObstacle = new StaticObstacle(this.scene, this.scene.canvas.width, yPosition, assetKey);
+                                staticObstacles.add(staticObstacle, true);
                                 break;
                         }
                     } else {

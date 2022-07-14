@@ -1,5 +1,5 @@
 import Phaser from 'phaser'
-import SkiFreeScene, { GAME_VELOCITY } from '../scenes/Game'
+import SkiFreeScene from '../scenes/Game'
 
 export default class Chasing extends Phaser.Physics.Arcade.Sprite
 {

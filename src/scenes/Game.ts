@@ -151,14 +151,7 @@ export default class SkiFreeScene extends Phaser.Scene {
       const typedChild = (child as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody);
       if (typedChild.body.right <= 0) {
         this.staticObstacles?.remove(typedChild, true, true);
-      } else {
-        typedChild.setVelocityX(this.gameVelocity)
-      }
-    });
-
-    this.staticObstacles?.children.iterate(obstacle => {
-      const ob = obstacle as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
-      ob.texture.key === DINOSAUR ? ob.anims.play(DINOSAUR, true) : {}
+      } 
     });
 
     // Dynamic obstacle trash collection
