@@ -15,6 +15,7 @@ export default class SkiFreeScene extends Phaser.Scene {
   public player: Player | undefined;
   private spawner: Spawner | undefined;
   public cursors: Phaser.Types.Input.Keyboard.CursorKeys | undefined;
+  public tryAgain: Phaser.Physics.Arcade.Image | undefined;
 
   public gameVelocity: number = START_GAME_VELOCITY;
 
@@ -37,7 +38,7 @@ export default class SkiFreeScene extends Phaser.Scene {
       delay: 1000,
       loop: false,
       callback: () => {
-        this.scene.start("GameOverScene");
+        // this.scene.start("GameOverScene");
       }
     })
   }
@@ -58,6 +59,7 @@ export default class SkiFreeScene extends Phaser.Scene {
     this.load.image(TREE, 'assets/tree_snowy1.png');
     this.load.image(LITTLE_ROCK, 'assets/rock_little.png');
     this.load.image(BIG_ROCK, 'assets/rock_big.png');
+    this.load.image('tryAgain', 'assets/game-over.png');
     this.load.spritesheet(DINOSAUR, 'assets/dinosaur.png', { frameWidth: 100, frameHeight: 100 });
     this.load.spritesheet(SKIER, 'assets/skier.png', { frameWidth: Player.WIDTH, frameHeight: Player.HEIGHT });
     this.load.spritesheet(WOLF, 'assets/running_wolf_sprite.png', { frameWidth: 563, frameHeight: 265 });
@@ -70,6 +72,8 @@ export default class SkiFreeScene extends Phaser.Scene {
       .setOrigin(0)
     this.player = new Player(this, 100, 450, SKIER);
     this.spawner = new Spawner(this);
+    this.tryAgain = this.add.image(this.canvas.width / 2, SCREEN_HEIGHT / 2, 'tryAgain').setInteractive();
+    this.tryAgain?.setDepth(-1);
 
     // set up static and dynamic obstacle groups
     this.staticObstacles = this.physics.add.group({
@@ -126,6 +130,8 @@ export default class SkiFreeScene extends Phaser.Scene {
       this.background && (this.background.tilePositionX -= this.worldToTileUnit(this.gameVelocity));
       const score = Math.floor(this.ticks / 10);
       this.registry.get('scoreText').setText('Score: ' + score);
+    } else {
+      this.tryAgain?.setDepth(2)
     }
 
     this.player?.update();
