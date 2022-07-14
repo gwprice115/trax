@@ -224,6 +224,7 @@ export default class SkiFreeScene extends Phaser.Scene {
   }
 
   update() {
+    this.scale.refresh();
     switch (this.gameState) {
       case GameStates.Instructions:
         this.moveBackground();
