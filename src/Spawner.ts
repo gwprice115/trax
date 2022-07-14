@@ -98,6 +98,7 @@ export class Spawner {
     private getValidSpawnY = () => Math.random() * (this.scene.canvas.height - this.scene.getSkyHeight()) + this.scene.getSkyHeight();
 
     public maybeSpawnObstacle(ticks: number) {
+        const spawn_plane = this.scene.canvas.width + 100;
         if (ticks % SPAWN_CHECK_RATE === 0 && Math.random() < PROBABILITY_OF_SPAWN) {
             const { staticObstacles, dynamicObstacles, player, gameState } = this.scene;
             if (gameState === GameStates.PlayGame && staticObstacles != null && dynamicObstacles != null && player != null) {
@@ -114,18 +115,18 @@ export class Spawner {
                         // console.log(assetKey)
                         switch (assetKey) {
                             case BEAR:
-                                const bear = new Tracking(this.scene, this.scene.canvas.width, yPosition, BEAR, player);
+                                const bear = new Tracking(this.scene, spawn_plane, yPosition, BEAR, player);
                                 dynamicObstacles.add(bear, true);
                                 break;
                             case SNOWMAN:
-                                const snowman = new Falling(this.scene, this.scene.canvas.width * (Math.random() + 1) / 2, 0, SNOWMAN)
+                                const snowman = new Falling(this.scene, spawn_plane * (Math.random() + 1) / 2, 0, SNOWMAN)
                                 dynamicObstacles.add(snowman, true);
                             case WOLF:
-                                const wolf = new Chasing(this.scene, this.scene.canvas.width, yPosition, WOLF)
+                                const wolf = new Chasing(this.scene, spawn_plane, yPosition, WOLF)
                                 dynamicObstacles.add(wolf, true);
                                 break;
                             default: //static obstacles
-                                const staticObstacle = new StaticObstacle(this.scene, this.scene.canvas.width, yPosition, assetKey);
+                                const staticObstacle = new StaticObstacle(this.scene, spawn_plane, yPosition, assetKey);
                                 staticObstacles.add(staticObstacle, true);
                                 break;
                         }

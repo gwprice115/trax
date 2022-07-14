@@ -63,6 +63,10 @@ export default class SkiFreeScene extends Phaser.Scene {
     // destroy previous elements, if they exist
     this.staticObstacles?.clear(true, true);
     this.dynamicObstacles?.clear(true, true);
+    this.snowflakeEmitter?.manager.emitters.remove(this.snowflakeEmitter);
+    this.snowflakeEmitter?.manager.destroy();
+    this.snowflakeEmitter = undefined;
+
     this.player?.destruct();
     this.registry.get('scoreText')?.destroy();
   }
@@ -87,6 +91,7 @@ export default class SkiFreeScene extends Phaser.Scene {
       this.physics.add.overlap(this.player, this.dynamicObstacles, this.hitObstacle, undefined, this);
     }
 
+    this.createSnowflakes();
 
     // load score text
     const scoreText = this.add.text(16, 16, 'score: 0', { fontSize: '20px', color: '#000' });
@@ -214,14 +219,18 @@ export default class SkiFreeScene extends Phaser.Scene {
       .setOrigin(0)
 
     this.createAnimations();
+    this.createSnowflakes();
     this.gameState = GameStates.Instructions;
 
-    this.createSnowflakes();
 
     this.cursors = this.input.keyboard.createCursorKeys();
   }
 
   private createSnowflakes = () => {
+    if (this.snowflakeEmitter) {
+      return;
+    }
+
     const topOfCanvas = new Phaser.Geom.Line(0, 0, this.canvas.width * 2, 0);
     this.snowflakeEmitter = this.add.particles(SNOWFLAKES).setDepth(10000).createEmitter({
       name: 'snowflakeEmitter',
