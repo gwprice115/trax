@@ -51,8 +51,8 @@ const PROBABILITY_WEIGHTS = normalizeWeights({
     [BIG_ROCK]: 3,
     [HOUSE]: 5,
     [STICK]: 5,
-    [STONE]: 5,
-    [STONE2]: 5,
+    [STONE]: 2,
+    [STONE2]: 2,
     [TREE_EMPTY_1]: 5,
     [TREE_EMPTY_2]: 5,
     [TREE_SNOWY_1]: 10,
@@ -114,7 +114,6 @@ export class Spawner {
                         switch (assetKey) {
                             case BEAR:
                                 const bear = new Tracking(this.scene, this.scene.canvas.width, yPosition, BEAR, player);
-                                bear.body.setSize(32, 48);
                                 dynamicObstacles.add(bear, true);
                                 break;
                             case SNOWMAN:
