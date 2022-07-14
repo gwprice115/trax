@@ -46,7 +46,7 @@ export default class SkiFreeScene extends Phaser.Scene {
     })
   }
 
-  private worldToTileUnit = (worldUnit: number) => worldUnit / 150;
+  private worldToTileUnit = (worldUnit: number) => worldUnit / 120;
 
   public getSizeWithPerspective = (yPosition: number, baseSize: number) => (baseSize * 0.3 * yPosition / this.canvas.height) + (baseSize * 0.7);
 
