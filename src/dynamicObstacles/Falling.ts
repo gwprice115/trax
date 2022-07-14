@@ -1,16 +1,27 @@
 import Phaser from 'phaser'
-import { GAME_VELOCITY } from '../scenes/Game'
+import SkiFreeScene from '../scenes/Game';
+import { SNOWMAN } from '../Spawner';
 
 export default class Falling extends Phaser.Physics.Arcade.Sprite
 {
-	constructor(scene: Phaser.Scene, x: number, y: number, texture: string) {
+    private gameScene: SkiFreeScene;
+	constructor(scene: SkiFreeScene, x: number, y: number, texture: string) {
 		super(scene, x, y, texture)
 		scene.add.existing(this);
 		scene.physics.add.existing(this);
-	}
+        this.gameScene = scene;
+
+		switch (texture) {
+			case SNOWMAN:
+				this.setSize(this.width * 0.7, this.height * 0.8);
+				break;
+			default:
+				console.error(`Falling ${this} was not actually falling lmfao`)
+		}
+    }
 
     private fall() {
-        this.setVelocityX(GAME_VELOCITY * 3);
+        this.setVelocityX(this.gameScene.gameVelocity * 3);
         this.setVelocityY(Math.random() * 200 + 50)
     }
 

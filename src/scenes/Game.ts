@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 
 export const GAME_VELOCITY = -60;
-import { WOLF, PORTAL, LITTLE_ROCK, BIG_ROCK, SKIER, Spawner, TREE, SNOWMAN, BEAR, DINOSAUR } from '../Spawner';
+import { WOLF, PORTAL, LITTLE_ROCK, BIG_ROCK, SKIER, Spawner, TREE, SNOWMAN, BEAR, DINOSAUR, TREE_SNOWY_1, TREE_SNOWY_2, STICK, STONE, STONE2, TREE_TRUNK, HOUSE, TREE_EMPTY_1, TREE_EMPTY_2 } from '../Spawner';
 import Player from '../Player';
 import { SCREEN_HEIGHT } from '../config';
 
@@ -61,7 +61,7 @@ export default class SkiFreeScene extends Phaser.Scene {
 
   public getSizeWithPerspective = (yPosition: number, baseSize: number) => (baseSize * 0.3 * yPosition / this.canvas.height) + (baseSize * 0.7);
 
-  public getSkyHeight = () => this.canvas.height * 0.38;
+  public getSkyHeight = () => this.canvas.height * 0.35;
 
   public restartGame = () => {
     console.log('clicked button')
@@ -75,11 +75,20 @@ export default class SkiFreeScene extends Phaser.Scene {
     this.load.image('bg_mtn', 'assets/bg_mtn.png')
     this.load.image('bg_sky', 'assets/bg_sky.png')
     this.load.image('bg_snow', 'assets/bg_snow.png')
+    this.load.image(HOUSE, 'assets/house.png');
     this.load.image(SNOWMAN, 'assets/snowman.png');
     this.load.image(PORTAL, 'http://labs.phaser.io/assets/sprites/mushroom.png')
     this.load.image(SKI_TRAIL, 'http://labs.phaser.io/assets/particles/blue.png');
-    this.load.image(TREE, 'assets/tree_snowy1.png');
     this.load.image('gameOverHover', 'assets/game-over-hover.png')
+    this.load.image(STICK, 'assets/stick.png');
+    this.load.image(STONE, 'assets/stone.png');
+    this.load.image(STONE2, 'assets/stone2.png');
+    this.load.image(TREE_EMPTY_1, 'assets/tree_empty1.png');
+    this.load.image(TREE_EMPTY_2, 'assets/tree_empty2.png');
+    this.load.image(TREE_SNOWY_1, 'assets/tree_snowy1.png');
+    this.load.image(TREE_SNOWY_2, 'assets/tree_snowy2.png');
+    this.load.image(TREE_TRUNK, 'assets/tree_trunk.png');
+    this.load.image(TREE, 'assets/tree.png');
     this.load.image(LITTLE_ROCK, 'assets/rock_little.png');
     this.load.image(BIG_ROCK, 'assets/rock_big.png');
     this.load.image('tryAgain', 'assets/game-over.png');
@@ -105,7 +114,7 @@ export default class SkiFreeScene extends Phaser.Scene {
     let tryAgainButton = this.add.image(this.canvas.width / 2, SCREEN_HEIGHT / 2, 'tryAgain').setInteractive()
       .on('pointerover', () => { tryAgainButton.setTexture('gameOverHover') })
       .on('pointerout', () => { tryAgainButton.setTexture('tryAgain') })
-      .on('pointerup', () => { this.restartGame()})
+      .on('pointerup', () => { this.restartGame() })
       ;
     // this.tryAgain?.once('pointerup', this.restartGame, this);
     this.tryAgain?.setDepth(-1);
@@ -146,7 +155,7 @@ export default class SkiFreeScene extends Phaser.Scene {
     this.anims.create({
       key: WOLF,
       frames: this.anims.generateFrameNumbers(WOLF, { start: 0, end: 7 }),
-      frameRate: 5,
+      frameRate: 8,
       repeat: -1,
     })
 
@@ -165,7 +174,7 @@ export default class SkiFreeScene extends Phaser.Scene {
       this.gameVelocity -= 0.1;
       this.bg_snow && (this.bg_snow.tilePositionX -= this.worldToTileUnit(this.gameVelocity));
       this.bg_mtn && (this.bg_mtn.tilePositionX -= this.worldToTileUnit(0.9 * this.gameVelocity));
-      this.bg_sky && (this.bg_sky.tilePositionX -= this.worldToTileUnit(0.6 * this.gameVelocity));      
+      this.bg_sky && (this.bg_sky.tilePositionX -= this.worldToTileUnit(0.6 * this.gameVelocity));
       const score = Math.floor(this.ticks / 10);
       this.registry.get('scoreText').setText('Score: ' + score);
     } else if (this.gameState === GameStates.GameOver) {
@@ -181,14 +190,7 @@ export default class SkiFreeScene extends Phaser.Scene {
       const typedChild = (child as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody);
       if (typedChild.body.right <= 0) {
         this.staticObstacles?.remove(typedChild, true, true);
-      } else {
-        typedChild.setVelocityX(this.gameVelocity)
       }
-    });
-
-    this.staticObstacles?.children.iterate(obstacle => {
-      const ob = obstacle as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
-      ob.texture.key === DINOSAUR ? ob.anims.play(DINOSAUR, true) : {}
     });
 
     // Dynamic obstacle trash collection

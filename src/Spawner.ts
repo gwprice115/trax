@@ -3,12 +3,22 @@ import { SCREEN_HEIGHT } from "./config";
 import Chasing from "./dynamicObstacles/Chasing";
 import Falling from "./dynamicObstacles/Falling";
 import Tracking from "./dynamicObstacles/Tracking";
+import StaticObstacle from "./StaticObstacle";
 import Player from "./Player";
 import SkiFreeScene, {GameStates} from "./scenes/Game";
 import { getNoiseFunction } from "./utils/utils";
 
 
 export const TREE = 'tree';
+export const TREE_SNOWY_1 = 'tree_snowy1';
+export const TREE_SNOWY_2 = 'tree_snowy2';
+export const STICK = 'stick';
+export const STONE = 'stone';
+export const STONE2 = 'stone2';
+export const TREE_TRUNK = 'tree_trunk';
+export const TREE_EMPTY_1 = 'tree_empty1';
+export const TREE_EMPTY_2 = 'tree_empty2';
+export const HOUSE = 'house';
 export const ROCK = 'rock';
 export const BIG_ROCK = 'big_rock'
 export const LITTLE_ROCK = 'little_rock'
@@ -40,7 +50,16 @@ function normalizeWeights(weights: Record<string, number>): Record<string, numbe
 const PROBABILITY_WEIGHTS = normalizeWeights({
     [LITTLE_ROCK]: 5,
     [BIG_ROCK]: 3,
-    [TREE]: 10,
+    [HOUSE]: 5,
+    [STICK]: 5,
+    [STONE]: 5,
+    [STONE2]: 5,
+    [TREE_EMPTY_1]: 100,
+    [TREE_EMPTY_2]: 100,
+    [TREE_SNOWY_1]: 100,
+    [TREE_SNOWY_2]: 100,
+    [TREE]: 100,
+    [TREE_TRUNK]: 2,
     [PORTAL]: 0,
     [SNOWMAN]: 3,
     [BEAR]: 2,
@@ -104,15 +123,11 @@ export class Spawner {
                                 dynamicObstacles.add(snowman, true);
                             case WOLF:
                                 const wolf = new Chasing(this.scene, this.scene.canvas.width, yPosition, WOLF)
-                                wolf.body.setSize(80, 32);
-                                wolf.displayHeight = 32
-                                wolf.scaleX = wolf.scaleY;
                                 dynamicObstacles.add(wolf, true);
                                 break;
                             default: //static obstacles
-                                const newObstacle = staticObstacles.create(this.scene.canvas.width, yPosition, assetKey, 0);
-                                newObstacle.displayHeight = this.scene.getSizeWithPerspective(newObstacle.y, newObstacle.height)
-                                newObstacle.scaleX = newObstacle.scaleY;
+                                const staticObstacle = new StaticObstacle(this.scene, this.scene.canvas.width, yPosition, assetKey);
+                                staticObstacles.add(staticObstacle, true);
                                 break;
                         }
                     } else {
