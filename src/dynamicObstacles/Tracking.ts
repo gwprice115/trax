@@ -13,6 +13,9 @@ export default class Tracking extends Phaser.Physics.Arcade.Sprite
 		scene.physics.add.existing(this);
 		this.play(texture);
 		this.gameScene = scene;
+
+		this.displayHeight = this.height * 0.8;
+		this.scaleX = this.scaleY;
 	}
 
 	private trackPlayer() {

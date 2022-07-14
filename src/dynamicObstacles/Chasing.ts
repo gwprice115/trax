@@ -1,5 +1,6 @@
 import Phaser from 'phaser'
 import SkiFreeScene from '../scenes/Game'
+import { WOLF } from '../Spawner';
 
 export default class Chasing extends Phaser.Physics.Arcade.Sprite
 {
@@ -10,10 +11,20 @@ export default class Chasing extends Phaser.Physics.Arcade.Sprite
 		scene.physics.add.existing(this);
 		this.play(texture);
 		this.gameScene = scene;
+
+		switch (texture) {
+			case WOLF:
+				this.displayHeight = 32
+				this.scaleX = this.scaleY;
+				this.setSize(this.width * 0.9, this.height * 0.5);
+				break;
+			default:
+				console.error(`Chaser ${this} was not actually a chaser lmfao`)
+		}
 	}
 
     private chase() {
-        this.setVelocityX(this.gameScene.gameVelocity * 4);
+        this.setVelocityX(this.gameScene.gameVelocity - 100);
     }
 
 	update() {
