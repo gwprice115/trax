@@ -1,11 +1,9 @@
-import { Game } from "phaser";
-import { SCREEN_HEIGHT } from "./config";
 import Chasing from "./dynamicObstacles/Chasing";
 import Falling from "./dynamicObstacles/Falling";
 import Tracking from "./dynamicObstacles/Tracking";
 import StaticObstacle from "./StaticObstacle";
 import Player from "./Player";
-import SkiFreeScene, { GameStates } from "./scenes/Game";
+import SkiFreeScene, { START_GAME_VELOCITY, GameStates } from "./scenes/Game";
 import { getNoiseFunction } from "./utils/utils";
 
 
@@ -34,10 +32,7 @@ enum CurveSetterDirection {
     Down = 1,
 }
 
-const curveSetterNoise = getNoiseFunction(10);
-
-const SPAWN_CHECK_RATE = 20;
-const PROBABILITY_OF_SPAWN = .5;
+const curveSetterNoise = getNoiseFunction(3);
 
 const SHOW_CURVE_SETTER = false;
 
@@ -50,14 +45,14 @@ function normalizeWeights(weights: Record<string, number>): Record<string, numbe
 const PROBABILITY_WEIGHTS = normalizeWeights({
     [LITTLE_ROCK]: 5,
     [BIG_ROCK]: 3,
-    [HOUSE]: 5,
+    [HOUSE]: 1,
     [STICK]: 5,
     [STONE]: 2,
     [STONE2]: 2,
-    [TREE_EMPTY_1]: 10,
-    [TREE_EMPTY_2]: 10,
+    [TREE_EMPTY_1]: 5,
+    [TREE_EMPTY_2]: 5,
     [TREE_SNOWY_1]: 50,
-    [TREE_SNOWY_2]: 50,
+    [TREE_SNOWY_2]: 20,
     [TREE]: 10,
     [TREE_TRUNK]: 2,
     [PORTAL]: 0,
@@ -71,6 +66,7 @@ export class Spawner {
 
     private scene: SkiFreeScene;
     private curveSetter: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
+    private spawnProbability =  0;
 
     constructor(scene: SkiFreeScene) {
         this.scene = scene;
@@ -80,7 +76,7 @@ export class Spawner {
         if (!SHOW_CURVE_SETTER) {
             this.curveSetter.disableBody(false, true);
         }
-    }
+    } 
 
     public updateCurveSetter(ticks: number) {
         const direction = curveSetterNoise(ticks) < 0 ? CurveSetterDirection.Down : CurveSetterDirection.Up;
@@ -98,8 +94,10 @@ export class Spawner {
     private getValidSpawnY = () => Math.random() * (this.scene.canvas.height - this.scene.getSkyHeight()) + this.scene.getSkyHeight();
 
     public maybeSpawnObstacle(ticks: number) {
-        const spawn_plane = this.scene.canvas.width + 100;
-        if (ticks % SPAWN_CHECK_RATE === 0 && Math.random() < PROBABILITY_OF_SPAWN) {
+        const fps = 1000 / this.scene?.dt;
+        const SPAWN_CHECK_RATE = Math.round(fps / 6); // normalize for different framerates
+
+        if (ticks % SPAWN_CHECK_RATE === 0 && Math.random() < this.spawnProbability) {
             const { staticObstacles, dynamicObstacles, player, gameState } = this.scene;
             if (gameState === GameStates.PlayGame && staticObstacles != null && dynamicObstacles != null && player != null) {
                 let weightSum = 0;
@@ -115,18 +113,18 @@ export class Spawner {
                         // console.log(assetKey)
                         switch (assetKey) {
                             case BEAR:
-                                const bear = new Tracking(this.scene, spawn_plane, yPosition, BEAR, player);
+                                const bear = new Tracking(this.scene, this.scene.canvas.width, yPosition, BEAR, player);
                                 dynamicObstacles.add(bear, true);
                                 break;
                             case SNOWMAN:
-                                const snowman = new Falling(this.scene, spawn_plane * (Math.random() + 1) / 2, 0, SNOWMAN)
+                                const snowman = new Falling(this.scene, this.scene.canvas.width * (Math.random() + 1) / 2, 0, SNOWMAN)
                                 dynamicObstacles.add(snowman, true);
                             case WOLF:
-                                const wolf = new Chasing(this.scene, spawn_plane, yPosition, WOLF)
+                                const wolf = new Chasing(this.scene, this.scene.canvas.width, yPosition, WOLF)
                                 dynamicObstacles.add(wolf, true);
                                 break;
                             default: //static obstacles
-                                const staticObstacle = new StaticObstacle(this.scene, spawn_plane, yPosition, assetKey);
+                                const staticObstacle = new StaticObstacle(this.scene, this.scene.canvas.width, yPosition, assetKey);
                                 staticObstacles.add(staticObstacle, true);
                                 break;
                         }
@@ -137,6 +135,9 @@ export class Spawner {
                 assetPlaced = false;
                 weightSum = 0;
             }
+        } 
+        if (this.spawnProbability < 1) {
+            this.spawnProbability = 0.2 + Math.pow(this.scene.gameVelocity - START_GAME_VELOCITY, 2) / 100000; // slightly exponential increase in probability
         }
     }
 }
