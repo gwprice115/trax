@@ -5,7 +5,7 @@ import Falling from "./dynamicObstacles/Falling";
 import Tracking from "./dynamicObstacles/Tracking";
 import StaticObstacle from "./StaticObstacle";
 import Player from "./Player";
-import SkiFreeScene, {GameStates} from "./scenes/Game";
+import SkiFreeScene, { GameStates } from "./scenes/Game";
 import { getNoiseFunction } from "./utils/utils";
 
 
@@ -39,7 +39,7 @@ const curveSetterNoise = getNoiseFunction(10);
 const SPAWN_CHECK_RATE = 20;
 const PROBABILITY_OF_SPAWN = .5;
 
-const SHOW_CURVE_SETTER = true;
+const SHOW_CURVE_SETTER = false;
 
 function normalizeWeights(weights: Record<string, number>): Record<string, number> {
     const valueSum = Object.values(weights).reduce((a, b) => a + b);

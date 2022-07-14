@@ -28,13 +28,13 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 		this.scaleX = this.scaleY;
 
 		this.setCollideWorldBounds(true);
-		this.setOrigin(0,1);
+		this.setOrigin(0, 1);
 	}
 
 	update() {
 		if (this.gameScene.gameState === GameStates.PlayGame) {
 			this.anims.play(this.texture, true);
-			this.skiTrailEmitter.setPosition(this.x+6, this.y-3);
+			this.skiTrailEmitter.setPosition(this.x + 6, this.y - 3);
 			if (this.gameScene.cursors?.up.isDown) {
 				// sky bounds
 				if (this.y < this.gameScene.getSkyHeight()) {
@@ -57,5 +57,11 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 			this.scaleX = scaleFactor;
 			this.skiTrailEmitter.setScaleX(scaleFactor * 0.1).setScaleY(scaleFactor * 0.07);
 		}
+	}
+
+	public destruct() {
+		this.skiTrailEmitter?.manager.emitters.remove(this.skiTrailEmitter);
+		this.skiTrailEmitter?.manager.destroy();
+		this.destroy();
 	}
 }
