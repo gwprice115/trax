@@ -47,7 +47,7 @@ function normalizeWeights(weights: Record<string, number>): Record<string, numbe
     return Object.entries(weights).reduce((p, [k, v]) => Object.assign(p, { [k]: v * coefficient }), {});
 }
 
-const PROBABILITY_WEIGHTS = normalizeWeights({
+const PROBABILITY_WEIGHTS = {
     [LITTLE_ROCK]: 5,
     [BIG_ROCK]: 3,
     [HOUSE]: 5,
@@ -65,7 +65,14 @@ const PROBABILITY_WEIGHTS = normalizeWeights({
     [BEAR]: 2,
     [WOLF]: 1,
     [DINOSAUR]: 2,
-});
+};
+
+const ENTRANCE_TIMES = {
+    [DINOSAUR]: 1000,
+    [SNOWMAN]: 2000,
+    [WOLF]: 3000,
+    [BEAR]: 4000,
+};
 
 export class Spawner {
 
@@ -105,14 +112,16 @@ export class Spawner {
                 let weightSum = 0;
                 let assetPlaced = false;
                 const randomValue = Math.random();
-                Object.keys(PROBABILITY_WEIGHTS).forEach(assetKey => {
-                    if (!assetPlaced && randomValue <= weightSum + PROBABILITY_WEIGHTS[assetKey]) {
+                const timeGatedProbabilityWeights = normalizeWeights(Object.entries(PROBABILITY_WEIGHTS).filter(([k, v]) => 
+                    ENTRANCE_TIMES[k as keyof typeof ENTRANCE_TIMES] == null || ENTRANCE_TIMES[k as keyof typeof ENTRANCE_TIMES] < ticks
+                ).reduce((p, [k, v]) => Object.assign(p, { [k]: v }), {}));
+                Object.keys(timeGatedProbabilityWeights).forEach(assetKey => {
+                    if (!assetPlaced && randomValue <= weightSum + timeGatedProbabilityWeights[assetKey]) {
                         assetPlaced = true;
                         let yPosition = this.getValidSpawnY();
                         while (yPosition > this.curveSetter.y - 60 && yPosition < this.curveSetter.y + 60) {
                             yPosition = this.getValidSpawnY();
                         }
-                        // console.log(assetKey)
                         switch (assetKey) {
                             case BEAR:
                                 const bear = new Tracking(this.scene, spawn_plane, yPosition, BEAR, player);
@@ -132,7 +141,7 @@ export class Spawner {
                                 break;
                         }
                     } else {
-                        weightSum += PROBABILITY_WEIGHTS[assetKey];
+                        weightSum += timeGatedProbabilityWeights[assetKey];
                     }
                 });
                 assetPlaced = false;
