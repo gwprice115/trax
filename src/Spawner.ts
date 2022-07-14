@@ -104,9 +104,6 @@ export class Spawner {
                                 dynamicObstacles.add(snowman, true);
                             case WOLF:
                                 const wolf = new Chasing(this.scene, this.scene.canvas.width, yPosition, WOLF)
-                                wolf.body.setSize(80, 32);
-                                wolf.displayHeight = 32
-                                wolf.scaleX = wolf.scaleY;
                                 dynamicObstacles.add(wolf, true);
                                 break;
                             default: //static obstacles

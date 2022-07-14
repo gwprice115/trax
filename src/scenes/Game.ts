@@ -50,7 +50,7 @@ export default class SkiFreeScene extends Phaser.Scene {
 
   public getSizeWithPerspective = (yPosition: number, baseSize: number) => (baseSize * 0.3 * yPosition / this.canvas.height) + (baseSize * 0.7);
 
-  public getSkyHeight = () => this.canvas.height * 0.38;
+  public getSkyHeight = () => this.canvas.height * 0.35;
 
   preload() {
     this.scale.refresh();
@@ -119,7 +119,7 @@ export default class SkiFreeScene extends Phaser.Scene {
     this.anims.create({
       key: WOLF,
       frames: this.anims.generateFrameNumbers(WOLF, { start: 0, end: 7 }),
-      frameRate: 5,
+      frameRate: 8,
       repeat: -1,
     })
 

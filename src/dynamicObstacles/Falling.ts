@@ -1,5 +1,6 @@
 import Phaser from 'phaser'
 import SkiFreeScene from '../scenes/Game';
+import { SNOWMAN } from '../Spawner';
 
 export default class Falling extends Phaser.Physics.Arcade.Sprite
 {
@@ -9,6 +10,14 @@ export default class Falling extends Phaser.Physics.Arcade.Sprite
 		scene.add.existing(this);
 		scene.physics.add.existing(this);
         this.gameScene = scene;
+
+		switch (texture) {
+			case SNOWMAN:
+				this.setSize(this.width * 0.7, this.height * 0.8);
+				break;
+			default:
+				console.error(`Falling ${this} was not actually falling lmfao`)
+		}
     }
 
     private fall() {
