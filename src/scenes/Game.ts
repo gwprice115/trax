@@ -1,4 +1,4 @@
-import Phaser, { Game, Time } from 'phaser';
+import Phaser from 'phaser';
 
 export const GAME_VELOCITY = -60;
 import { WOLF, PORTAL, LITTLE_ROCK, BIG_ROCK, SKIER, Spawner, TREE, SNOWMAN, BEAR, DINOSAUR, TREE_SNOWY_1, TREE_SNOWY_2, STICK, STONE, STONE2, TREE_TRUNK, HOUSE, TREE_EMPTY_1, TREE_EMPTY_2 } from '../Spawner';
