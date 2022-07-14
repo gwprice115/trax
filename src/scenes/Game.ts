@@ -1,4 +1,4 @@
-import Phaser, { Game } from 'phaser';
+import Phaser, { Game, Time } from 'phaser';
 
 export const GAME_VELOCITY = -60;
 import { WOLF, PORTAL, LITTLE_ROCK, BIG_ROCK, SKIER, Spawner, TREE, SNOWMAN, BEAR, DINOSAUR, TREE_SNOWY_1, TREE_SNOWY_2, STICK, STONE, STONE2, TREE_TRUNK, HOUSE, TREE_EMPTY_1, TREE_EMPTY_2 } from '../Spawner';
@@ -27,6 +27,7 @@ export default class SkiFreeScene extends Phaser.Scene {
   public tryAgain: Phaser.GameObjects.Image | undefined;
   public instructions: Phaser.GameObjects.Image | undefined;
   public start: Phaser.GameObjects.Image | undefined;
+  private lastUpdate?: Date;
 
   public gameVelocity: number = START_GAME_VELOCITY;
 
@@ -52,8 +53,6 @@ export default class SkiFreeScene extends Phaser.Scene {
     (player as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody).setTint(0xff0000);
     (obstacle as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody).setTint(0xff0000);
   }
-
-  private worldToTileUnit = (worldUnit: number) => worldUnit / 120;
 
   public getSizeWithPerspective = (yPosition: number, baseSize: number) => (baseSize * 0.3 * yPosition / this.canvas.height) + (baseSize * 0.7);
 
@@ -242,10 +241,23 @@ export default class SkiFreeScene extends Phaser.Scene {
   }
 
   private moveBackground = () => {
-    this.bg_snow && (this.bg_snow.tilePositionX -= this.worldToTileUnit(this.gameVelocity));
-    this.bg_mtnnear && (this.bg_mtnnear.tilePositionX -= this.worldToTileUnit(0.9 * this.gameVelocity));
-    this.bg_mtnfar && (this.bg_mtnfar.tilePositionX -= this.worldToTileUnit(0.7 * this.gameVelocity));
-    this.bg_sky && (this.bg_sky.tilePositionX -= this.worldToTileUnit(0.5 * this.gameVelocity));
+    const currTime = new Date();
+    if (this.lastUpdate) {
+      const dt = currTime.getTime() - this.lastUpdate.getTime();
+
+      const translate = (velocity: number, dt: number) => {
+        const fps = 1000 / dt;
+        return velocity / fps;
+      }
+
+      this.bg_snow && (this.bg_snow.tilePositionX -= translate(this.gameVelocity, dt));
+      this.bg_mtnnear && (this.bg_mtnnear.tilePositionX -= translate(0.9 * this.gameVelocity, dt));
+      this.bg_mtnfar && (this.bg_mtnfar.tilePositionX -= translate(0.7 * this.gameVelocity, dt));
+      this.bg_sky && (this.bg_sky.tilePositionX -= translate(0.5 * this.gameVelocity, dt));
+    }
+
+    this.lastUpdate = currTime;
+
   }
 
   private emitSnowflakes = () => {
