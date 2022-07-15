@@ -219,7 +219,7 @@ export default class SkiFreeScene extends Phaser.Scene {
   }
 
   private onTryAgain = () => {
-    if (this.gameState != GameStates.GameOver) return;
+    if (this.gameState != GameStates.GameOver && this.gameState != GameStates.Leaderboard) return;
     this.sound.play("click");
     this.gameOver?.destroy();
     this.gameOver = undefined;
@@ -227,6 +227,10 @@ export default class SkiFreeScene extends Phaser.Scene {
     this.tryAgain = undefined;
     this.leaderboardButton?.destroy();
     this.leaderboardButton = undefined;
+    this.leaderboardBox?.destroy();
+    this.leaderboardBox = undefined;
+    this.leaderboardText?.forEach((e) => e.destroy());
+    this.leaderboardText = [];
     this.initGame(GameStates.PlayGame);
   }
 
@@ -257,6 +261,7 @@ export default class SkiFreeScene extends Phaser.Scene {
     this.soundButton && (this.soundButton.x = this.canvas.width - 60);
     this.leaderboardBox && (this.leaderboardBox.x = this.canvas.width / 2);
     this.leaderboardText?.forEach((e) => e.destroy());
+    console.log(this.leaderboardText?.length)
     this.populateLeaderboardText();
   }
 
@@ -298,11 +303,14 @@ export default class SkiFreeScene extends Phaser.Scene {
   }
 
   private populateLeaderboardText() {
-    if (!this.leaderboardText) return;
+    if (this.gameState != GameStates.Leaderboard || !this.leaderboardBox) return;
 
     this.BOX_WIDTH = this.leaderboardBox ? this.leaderboardBox.width : 0;
     this.BOX_HEIGHT = this.leaderboardBox ? this.leaderboardBox.height : 0;
     TITLE_PADDING = 20;
+
+    this.leaderboardText?.forEach((e) => e.destroy());
+    this.leaderboardText = [];
 
     var { BOX_HEIGHT, BOX_WIDTH, TITLE_PADDING } = this;
     this.leaderboardText.push(this.add.bitmapText((this.canvas.width / 2) - BOX_WIDTH / 2 + TITLE_PADDING, BOX_HEIGHT / 4, "arcadeFont", "RANK", 15).setTint(0x000000));
@@ -338,20 +346,10 @@ export default class SkiFreeScene extends Phaser.Scene {
 
     this.populateLeaderboardText();
 
-
     this.tryAgain = this.add.image(this.canvas.width / 2, SCREEN_HEIGHT / 2 + 120, 'tryAgain').setInteractive({ cursor: "pointer" })
       .on('pointerover', () => { this.tryAgain?.setTexture('tryAgainHover') })
       .on('pointerout', () => { this.tryAgain?.setTexture('tryAgain') })
-      .on('pointerup', () => {
-        this.gameOver?.destroy();
-        this.gameOver = undefined;
-        this.tryAgain?.destroy();
-        this.tryAgain = undefined;
-        this.leaderboardBox?.destroy();
-        this.leaderboardBox = undefined;
-        this.initGame(GameStates.PlayGame);
-        this.leaderboardText?.forEach((item) => item.destroy())
-      });
+      .on('pointerup', this.onTryAgain);
     this.tryAgain?.setDepth(202);
   }
 
