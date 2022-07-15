@@ -42,7 +42,7 @@ export default class SkiFreeScene extends Phaser.Scene {
   public playerText: Phaser.GameObjects.BitmapText| undefined; 
   public playerName: string = ""; // todo: fill in with player name from foundry
   public currentScore: number = 0;
-  public leaderboardArr: [string, number][] = [["Karp", 9999], ["Karp", 5000], ["Karp", 3900],["Karp", 30],["Karp", 20]];
+  public leaderboardArr: [string, number][] = [["Karp", 9999], ["Karp", 5000], ["Karp", 3900],["Karp", 300],["Karp", 200]];
   public curRank: number = -1;
   public leaderboardText: any[] | undefined;
 
@@ -418,8 +418,7 @@ export default class SkiFreeScene extends Phaser.Scene {
 
     this.createAnimations();
     this.createSnowflakes();
-    // TODO CHANGE BACK TO INSTRUCTIONS
-    this.gameState = GameStates.Leaderboard;
+    this.gameState = GameStates.Instructions;
 
     this.cursors = this.input.keyboard.createCursorKeys();
   }
