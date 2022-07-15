@@ -53,6 +53,7 @@ export default class SkiFreeScene extends Phaser.Scene {
     this.anims.pauseAll();
     this.gameState = GameStates.GameOver;
     this.gameVelocity = START_GAME_VELOCITY;
+    this.player?.skiTrailEmitter.pause();
     this.ticks = 0;
     (player as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody).setTint(0xff0000);
     (obstacle as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody).setTint(0xff0000);
@@ -263,7 +264,7 @@ export default class SkiFreeScene extends Phaser.Scene {
     this.load.image(HOUSE, 'assets/house.png');
     this.load.image(SNOWMAN, 'assets/snowman.png');
     this.load.image(PORTAL, 'http://labs.phaser.io/assets/sprites/mushroom.png')
-    this.load.image(SKI_TRAIL, 'http://labs.phaser.io/assets/particles/blue.png');
+    this.load.image(SKI_TRAIL, 'assets/trail.png');
     this.load.image(STICK, 'assets/stick.png');
     this.load.image(STONE, 'assets/stone.png');
     this.load.image(STONE2, 'assets/stone2.png');
@@ -410,6 +411,7 @@ export default class SkiFreeScene extends Phaser.Scene {
       case GameStates.GamePaused:
         this.physics.pause();
         this.anims.pauseAll();
+        this.player?.skiTrailEmitter.pause();
         this.input.keyboard.addKey("SPACE")
           .on('up', () => this.gameState = GameStates.PlayGame);
         if(this.gamePaused == null) {

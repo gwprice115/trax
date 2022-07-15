@@ -10,14 +10,14 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 	public static DISPLAY_HEIGHT = 50;
 
 	private gameScene: SkiFreeScene;
-	private skiTrailEmitter: Phaser.GameObjects.Particles.ParticleEmitter;
+	public skiTrailEmitter: Phaser.GameObjects.Particles.ParticleEmitter;
 
 	constructor(scene: SkiFreeScene, x: number, y: number, texture: string) {
 		super(scene, x, y, texture);
 		this.gameScene = scene;
 		this.skiTrailEmitter = this.gameScene.add.particles(SKI_TRAIL).createEmitter({
 			name: 'skiTrailEmitter',
-			speedX: -125,
+			speedX: this.gameScene.gameVelocity,
 		});
 		scene.add.existing(this);
 		scene.physics.add.existing(this);
@@ -58,6 +58,8 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 			this.displayHeight = this.gameScene.getSizeWithPerspective(this.y, Player.DISPLAY_HEIGHT)
 			const scaleFactor = this.scaleY;
 			this.scaleX = scaleFactor;
+			this.skiTrailEmitter.resume();
+			this.skiTrailEmitter.setSpeedX(this.gameScene.gameVelocity);
 			this.skiTrailEmitter.setScaleX(scaleFactor * 0.1).setScaleY(scaleFactor * 0.07);
 		}
 	}
