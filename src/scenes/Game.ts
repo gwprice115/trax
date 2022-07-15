@@ -398,8 +398,6 @@ export default class SkiFreeScene extends Phaser.Scene {
     this.bg_snow = this.add.tileSprite(0, 0, this.canvas.width, SCREEN_HEIGHT, "bg_snow")
       .setOrigin(0)
 
-    // this.add.image(this.canvas.width/2, this.canvas.height/2, "bg_leaderboard");
-
     this.createAnimations();
     this.createSnowflakes();
     this.gameState = GameStates.Instructions;
@@ -499,12 +497,10 @@ export default class SkiFreeScene extends Phaser.Scene {
       case GameStates.GameOver:
         this.skiSound?.stop();
         this.createGameOver();
-        // this.scene.start()
         break;
       case GameStates.Leaderboard:
         // TODO: Add logic for putting leaderboard
         this.displayLeaderboard();
-        // this.createLeaderboard();
         break;
     }
   }
