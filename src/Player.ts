@@ -37,7 +37,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 			this.skiTrailEmitter.setPosition(this.x + 6, this.y - 3);
 			if (this.gameScene.cursors?.up.isDown) {
 				// sky bounds
-				if (this.y < this.gameScene.getSkyHeight()) {
+				if (this.y < this.gameScene.getSkyHeight() + this.displayHeight / 2) {
 					this.setVelocityY(0)
 				} else {
 					this.setVelocityY(-Player.VELOCITY);

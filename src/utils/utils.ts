@@ -1,7 +1,7 @@
 
 export const getNoiseFunction = (num_coeff: integer) => {
 
-    const offsets = Array.from({ length: num_coeff }, () => Math.PI / 30 * Math.random());
+    const offsets = Array.from({ length: num_coeff }, () => Math.PI / 60 * Math.random());
     const period = Array.from({ length: num_coeff }, () => Math.PI * Math.random());
     const zipped_arr = offsets.map((a, i) => [a, period[i]])
 
