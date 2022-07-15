@@ -35,11 +35,14 @@ export default class SkiFreeScene extends Phaser.Scene {
   private skiSound?: Phaser.Sound.BaseSound;
   private soundButton: Phaser.GameObjects.Image | undefined;
 
+  public rainbowText: Phaser.GameObjects.BitmapText|undefined;
+  public rainbowColor: number = 0;
+
   public scoreBitmapText: Phaser.GameObjects.BitmapText|undefined;
   public playerText: Phaser.GameObjects.BitmapText| undefined; 
   public playerName: string = ""; // todo: fill in with player name from foundry
   public currentScore: number = 0;
-  public leaderboardArr: [string, number][] = [["Karp", 9999], ["Karp", 5000], ["Karp", 3900],["Karp", 300],["Karp", 200]];
+  public leaderboardArr: [string, number][] = [["Karp", 9999], ["Karp", 5000], ["Karp", 3900],["Karp", 30],["Karp", 20]];
   public curRank: number = -1;
   public leaderboardText: any[] | undefined;
 
@@ -187,6 +190,17 @@ export default class SkiFreeScene extends Phaser.Scene {
     return this.sound.mute ? createUnmuteButton() : createMuteButton();
   }
 
+  private displayRainbowText = () => {
+    if (!this.rainbowText) this.rainbowText = this.add.bitmapText(this.canvas.width / 2 - 205, SCREEN_HEIGHT / 2 - this.BOX_HEIGHT / 2 - 5, "arcadeFont", "You got a high score!", 20).setTint(0xfff)
+    this.rainbowText?.setDepth(300);
+
+    this.rainbowColor ++;
+    if (this.rainbowColor === 360) this.rainbowColor = 0;
+    const top = Phaser.Display.Color.HSVColorWheel()[this.rainbowColor].color;
+    const bottom = Phaser.Display.Color.HSVColorWheel()[359 - this.rainbowColor].color;
+    this.rainbowText?.setTint(top, bottom, bottom, top)
+  }
+
   private onStart = () => {
     if (this.gameState != GameStates.Instructions) return;
     this.sound.play("click");
@@ -279,12 +293,13 @@ export default class SkiFreeScene extends Phaser.Scene {
       return;
     }
 
-    this.leaderboardBox = this.add.image(this.canvas.width/2, this.canvas.height/2, "bg_leaderboard");
+    TITLE_PADDING = 20;
+
+    this.leaderboardBox = this.add.image(this.canvas.width/2, this.canvas.height/2 - TITLE_PADDING, "bg_leaderboard");
     this.leaderboardBox.setDepth(200);
 
     this.BOX_WIDTH = this.leaderboardBox.width;
     this.BOX_HEIGHT = this.leaderboardBox.height;
-    TITLE_PADDING = 20;
 
     var {BOX_HEIGHT, BOX_WIDTH, TITLE_PADDING} = this;
 
@@ -310,7 +325,7 @@ export default class SkiFreeScene extends Phaser.Scene {
 
     this.leaderboardText.forEach((text) => text.setDepth(201))
     
-    this.tryAgain = this.add.image(this.canvas.width / 2, SCREEN_HEIGHT / 2 + 120, 'tryAgain').setInteractive({ cursor: "pointer" })
+    this.tryAgain = this.add.image(this.canvas.width / 2, SCREEN_HEIGHT / 2 + BOX_HEIGHT / 2 + 20 , 'tryAgain').setInteractive({ cursor: "pointer" })
       .on('pointerover', () => { this.tryAgain?.setTexture('tryAgainHover') })
       .on('pointerout', () => { this.tryAgain?.setTexture('tryAgain') })
       .on('pointerup', () => {
@@ -320,13 +335,13 @@ export default class SkiFreeScene extends Phaser.Scene {
         this.tryAgain = undefined;
         this.leaderboardBox?.destroy();
         this.leaderboardBox = undefined;
+        this.rainbowText?.destroy();
+        this.rainbowText = undefined;
         this.initGame(GameStates.PlayGame);
         this.leaderboardText?.forEach((item) => item.destroy())
       });
     this.tryAgain?.setDepth(202);
   }
-  
-
 
   preload() {
     this.scale.refresh();
@@ -403,7 +418,8 @@ export default class SkiFreeScene extends Phaser.Scene {
 
     this.createAnimations();
     this.createSnowflakes();
-    this.gameState = GameStates.Instructions;
+    // TODO CHANGE BACK TO INSTRUCTIONS
+    this.gameState = GameStates.Leaderboard;
 
     this.cursors = this.input.keyboard.createCursorKeys();
   }
@@ -521,6 +537,7 @@ export default class SkiFreeScene extends Phaser.Scene {
       case GameStates.Leaderboard:
         // TODO: Add logic for putting leaderboard
         this.displayLeaderboard();
+        this.displayRainbowText(); 
         break;
     }
   }
