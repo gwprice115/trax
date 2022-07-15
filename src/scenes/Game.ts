@@ -57,7 +57,7 @@ export default class SkiFreeScene extends Phaser.Scene {
 
   public getSizeWithPerspective = (yPosition: number, baseSize: number) => (baseSize * 0.3 * yPosition / this.canvas.height) + (baseSize * 0.7);
 
-  public getSkyHeight = () => this.canvas.height * 0.35;
+  public getSkyHeight = () => this.canvas.height * 0.3;
 
   public destroyGame = () => {
     // destroy previous elements, if they exist
@@ -286,24 +286,25 @@ export default class SkiFreeScene extends Phaser.Scene {
     }).setScale(0.5);
   }
 
-  private moveBackground = () => {
+  public dt = 0;
+  private updateTime = () => {
     const currTime = new Date();
     if (this.lastUpdate) {
-      const dt = currTime.getTime() - this.lastUpdate.getTime();
+      this.dt = currTime.getTime() - this.lastUpdate.getTime();
+    }
+    this.lastUpdate = currTime;
+  }
 
-      const translate = (velocity: number, dt: number) => {
-        const fps = 1000 / dt;
-        return velocity / fps;
-      }
-
-      this.bg_snow && (this.bg_snow.tilePositionX -= translate(this.gameVelocity, dt));
-      this.bg_mtnnear && (this.bg_mtnnear.tilePositionX -= translate(0.9 * this.gameVelocity, dt));
-      this.bg_mtnfar && (this.bg_mtnfar.tilePositionX -= translate(0.7 * this.gameVelocity, dt));
-      this.bg_sky && (this.bg_sky.tilePositionX -= translate(0.5 * this.gameVelocity, dt));
+  private moveBackground = () => {
+    const translate = (velocity: number) => {
+      const fps = 1000 / this.dt;
+      return velocity / fps;
     }
 
-    this.lastUpdate = currTime;
-
+    this.bg_snow && (this.bg_snow.tilePositionX -= translate(this.gameVelocity));
+    this.bg_mtnnear && (this.bg_mtnnear.tilePositionX -= translate(0.9 * this.gameVelocity));
+    this.bg_mtnfar && (this.bg_mtnfar.tilePositionX -= translate(0.7 * this.gameVelocity));
+    this.bg_sky && (this.bg_sky.tilePositionX -= translate(0.5 * this.gameVelocity));
   }
 
   private emitSnowflakes = () => {
@@ -320,6 +321,7 @@ export default class SkiFreeScene extends Phaser.Scene {
   }
 
   update() {
+    this.updateTime();
     this.scale.refresh();
     this.emitSnowflakes();
     switch (this.gameState) {
@@ -362,7 +364,5 @@ export default class SkiFreeScene extends Phaser.Scene {
         this.createGameOver();
         break;
     }
-
-
   }
 }
