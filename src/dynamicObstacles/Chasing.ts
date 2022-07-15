@@ -2,15 +2,17 @@ import Phaser from 'phaser'
 import SkiFreeScene from '../scenes/Game'
 import { WOLF } from '../Spawner';
 
-export default class Chasing extends Phaser.Physics.Arcade.Sprite
-{
+export default class Chasing extends Phaser.Physics.Arcade.Sprite {
 	private gameScene: SkiFreeScene;
-	constructor(scene: SkiFreeScene, x: number, y: number, texture: string) {
+	private setDepthFunction: (y: number) => number;
+
+	constructor(scene: SkiFreeScene, x: number, y: number, setDepthFunction: (y: number) => number, texture: string) {
 		super(scene, x, y, texture)
 		scene.add.existing(this);
 		scene.physics.add.existing(this);
 		this.play(texture);
 		this.gameScene = scene;
+		this.setDepthFunction = setDepthFunction;
 
 		switch (texture) {
 			case WOLF:
@@ -23,11 +25,12 @@ export default class Chasing extends Phaser.Physics.Arcade.Sprite
 		}
 	}
 
-    private chase() {
-        this.setVelocityX(this.gameScene.gameVelocity - 200);
-    }
+	private chase() {
+		this.setVelocityX(this.gameScene.gameVelocity - 200);
+	}
 
 	update() {
 		this.chase()
+		this.setDepthFunction(this.y + this.height / 2);
 	}
 }

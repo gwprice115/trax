@@ -8,6 +8,7 @@ import { SCREEN_HEIGHT } from '../config';
 export const SKI_TRAIL = 'ski-trail';
 export const START_GAME_VELOCITY = -80;
 
+const SNOWFLAKES = 'snowflakes';
 export const enum GameStates {
   Instructions,
   PlayGame,
@@ -21,18 +22,22 @@ export default class SkiFreeScene extends Phaser.Scene {
   public gameState: GameStates | undefined;
   public player: Player | undefined;
   private spawner: Spawner | undefined;
+  private snowflakeEmitter: Phaser.GameObjects.Particles.ParticleEmitter | undefined;
   public cursors: Phaser.Types.Input.Keyboard.CursorKeys | undefined;
   public gameOver: Phaser.GameObjects.Image | undefined;
   public leaderboardBox: Phaser.GameObjects.Image | undefined;
   public tryAgain: Phaser.GameObjects.Image | undefined;
   public instructions: Phaser.GameObjects.Image | undefined;
   public start: Phaser.GameObjects.Image | undefined;
+  private lastUpdate?: Date;
+  private skiSound?: Phaser.Sound.BaseSound;
+  private soundButton: Phaser.GameObjects.Image | undefined;
 
   public scoreBitmapText: Phaser.GameObjects.BitmapText|undefined;
   public playerText: Phaser.GameObjects.BitmapText| undefined; 
   public playerName: string = ""; // todo: fill in with player name from foundry
   public currentScore: number = 0;
-  public leaderboardArr: [string, number][] = [["Karp", 9999], ["Karp", 5000], ["Karp", 3900],["Karp", 30],["Karp", 20]];
+  public leaderboardArr: [string, number][] = [["Karp", 9999], ["Karp", 5000], ["Karp", 3900],["Karp", 300],["Karp", 200]];
   public curRank: number = -1;
   public leaderboardText: any[] | undefined;
 
@@ -46,8 +51,6 @@ export default class SkiFreeScene extends Phaser.Scene {
     super('GameScene');
   }
 
-  private costume = 'base';
-
   private bg_snow?: Phaser.GameObjects.TileSprite;
   private bg_sky?: Phaser.GameObjects.TileSprite;
   private bg_mtnnear?: Phaser.GameObjects.TileSprite;
@@ -57,6 +60,7 @@ export default class SkiFreeScene extends Phaser.Scene {
   public dynamicObstacles?: Phaser.Physics.Arcade.Group;
 
   private hitObstacle = (player: Phaser.Types.Physics.Arcade.GameObjectWithBody, obstacle: Phaser.Types.Physics.Arcade.GameObjectWithBody) => {
+    this.sound.play("ouch");
     this.physics.pause();
     
     this.gameVelocity = START_GAME_VELOCITY;
@@ -71,16 +75,18 @@ export default class SkiFreeScene extends Phaser.Scene {
     }
   }
 
-  private worldToTileUnit = (worldUnit: number) => worldUnit / 120;
-
   public getSizeWithPerspective = (yPosition: number, baseSize: number) => (baseSize * 0.3 * yPosition / this.canvas.height) + (baseSize * 0.7);
 
-  public getSkyHeight = () => this.canvas.height * 0.35;
+  public getSkyHeight = () => this.canvas.height * 0.3;
 
   public destroyGame = () => {
     // destroy previous elements, if they exist
     this.staticObstacles?.clear(true, true);
     this.dynamicObstacles?.clear(true, true);
+    this.snowflakeEmitter?.manager.emitters.remove(this.snowflakeEmitter);
+    this.snowflakeEmitter?.manager.destroy();
+    this.snowflakeEmitter = undefined;
+
     this.player?.destruct();
     this.scoreBitmapText?.destroy();
   }
@@ -89,7 +95,7 @@ export default class SkiFreeScene extends Phaser.Scene {
     if (!this.spawner) {
       this.spawner = new Spawner(this);
     }
-    this.player = new Player(this, 100, 450, SKIER);
+    this.player = new Player(this, 100, (this.canvas.height - this.getSkyHeight()) / 2 + this.getSkyHeight(), SKIER);
 
     // set up static and dynamic obstacle groups
     this.staticObstacles = this.physics.add.group({
@@ -104,6 +110,9 @@ export default class SkiFreeScene extends Phaser.Scene {
       this.physics.add.overlap(this.player, this.staticObstacles, this.hitObstacle, undefined, this);
       this.physics.add.overlap(this.player, this.dynamicObstacles, this.hitObstacle, undefined, this);
     }
+
+    this.createSnowflakes();
+
     // load score text
     this.scoreBitmapText = this.add.bitmapText(16, 16, "arcadeFont", "Score: 0", 20).setTint(0x000000)
   }
@@ -149,35 +158,104 @@ export default class SkiFreeScene extends Phaser.Scene {
     this.physics.resume();
   };
 
+  private createSoundButton = () => {
+    if (this.soundButton) return;
+
+    const createMuteButton = () => {
+      return this.add.image(this.canvas.width - 60, 20, 'unmuted').setInteractive({ cursor: "pointer" })
+        .on('pointerup', () => {
+          this.sound.play("click");
+          this.sound.mute = true;
+          this.soundButton?.destroy();
+          this.soundButton = createUnmuteButton();
+        }).setDepth(2);
+    }
+
+    const createUnmuteButton = () => {
+      return this.add.image(this.canvas.width - 60, 20, 'muted').setInteractive({ cursor: "pointer" })
+        .on('pointerup', () => {
+          this.sound.play("click");
+          this.sound.mute = false;
+          this.soundButton?.destroy();
+          this.soundButton = createMuteButton();
+        }).setDepth(2);
+    }
+
+    return this.sound.mute ? createUnmuteButton() : createMuteButton();
+  }
+
+  private onStart = () => {
+    if (this.gameState != GameStates.Instructions) return;
+
+    this.sound.play("click");
+    this.initGame(GameStates.PlayGame);
+    this.instructions?.destroy();
+    this.instructions = undefined;
+    this.start?.destroy();
+    this.start = undefined;
+  }
+
   private createStartMenu = () => {
     if (this.start) return;
 
-    this.instructions = this.add.image(this.canvas.width / 2, SCREEN_HEIGHT / 3 + 10, 'instructions')
-    this.start = this.add.image(this.canvas.width / 2, SCREEN_HEIGHT / 2 + 10, 'start').setInteractive({ cursor: "pointer" })
+    this.instructions = this.add.image(this.canvas.width / 2, SCREEN_HEIGHT / 3 + 20, 'instructions')
+    this.start = this.add.image(this.canvas.width / 2, SCREEN_HEIGHT / 2 + 30, 'start').setInteractive({ cursor: "pointer" })
       .on('pointerover', () => { this.start?.setTexture('startHover') })
       .on('pointerout', () => { this.start?.setTexture('start') })
-      .on('pointerup', () => {
-        this.initGame(GameStates.PlayGame); this.instructions?.destroy(); this.instructions = undefined;
-        this.start?.destroy(); this.start = undefined;
-      });
+      .on('pointerup', this.onStart);
+
+    this.input.keyboard.addKey("SPACE")
+      .on('down', () => { this.start?.setTexture('startHover') })
+      .on('up', this.onStart);
+
+    this.input.keyboard.addKey("ENTER")
+      .on('down', () => { this.start?.setTexture('startHover') })
+      .on('up', this.onStart);
+
     this.start?.setDepth(1);
     this.instructions?.setDepth(1);
   }
 
+  private onTryAgain = () => {
+    if (this.gameState != GameStates.GameOver) return;
+    this.sound.play("click");
+    this.gameOver?.destroy();
+    this.gameOver = undefined;
+    this.tryAgain?.destroy();
+    this.tryAgain = undefined;
+    this.initGame(GameStates.PlayGame);
+  }
+
+  private updateScale() {
+    this.scale.refresh();
+    this.bg_mtnnear && (this.bg_mtnnear.width = this.canvas.width);
+    this.bg_mtnfar && (this.bg_mtnfar.width = this.canvas.width);
+    this.bg_snow && (this.bg_snow.width = this.canvas.width);
+    this.bg_sky && (this.bg_sky.width = this.canvas.width);
+
+    this.tryAgain && (this.tryAgain.x = this.canvas.width / 2);
+    this.gameOver && (this.gameOver.x = this.canvas.width / 2);
+    this.start && (this.start.x = this.canvas.width / 2);
+    this.instructions && (this.instructions.x = this.canvas.width / 2);
+    this.soundButton && (this.soundButton.x = this.canvas.width - 60);
+  }
+
   private createGameOver = () => {
     if (this.gameOver) return;
-    // create tryAgain button
     this.gameOver = this.add.image(this.canvas.width / 2, SCREEN_HEIGHT / 2, 'gameOver');
     this.tryAgain = this.add.image(this.canvas.width / 2, SCREEN_HEIGHT / 2 + 35, 'tryAgain').setInteractive({ cursor: "pointer" })
       .on('pointerover', () => { this.tryAgain?.setTexture('tryAgainHover') })
       .on('pointerout', () => { this.tryAgain?.setTexture('tryAgain') })
-      .on('pointerup', () => {
-        this.gameOver?.destroy();
-        this.gameOver = undefined;
-        this.tryAgain?.destroy();
-        this.tryAgain = undefined;
-        this.initGame(GameStates.PlayGame);
-      });
+      .on('pointerup', this.onTryAgain);
+
+    this.input.keyboard.addKey("SPACE")
+      .on('down', () => { this.tryAgain?.setTexture('tryAgainHover') })
+      .on('up', this.onTryAgain);
+
+    this.input.keyboard.addKey("ENTER")
+      .on('down', () => { this.tryAgain?.setTexture('tryAgainHover') })
+      .on('up', this.onTryAgain);
+
     this.gameOver?.setDepth(1);
     this.tryAgain?.setDepth(2);
   }
@@ -200,6 +278,7 @@ export default class SkiFreeScene extends Phaser.Scene {
     }
 
     this.leaderboardBox = this.add.image(this.canvas.width/2, this.canvas.height/2, "bg_leaderboard");
+    this.leaderboardBox.setDepth(200);
 
     this.BOX_WIDTH = this.leaderboardBox.width;
     this.BOX_HEIGHT = this.leaderboardBox.height;
@@ -226,6 +305,8 @@ export default class SkiFreeScene extends Phaser.Scene {
         if (i !== this.curRank + 1) this.leaderboardText.push(this.add.bitmapText((this.canvas.width / 2)  + BOX_WIDTH / 3 - TITLE_PADDING, BOX_HEIGHT/4 + i * BOX_HEIGHT / 8, "arcadeFont", this.leaderboardArr[i-1][0], 15).setTint(0x000000));
       }
     }
+
+    this.leaderboardText.forEach((text) => text.setDepth(201))
     
     this.tryAgain = this.add.image(this.canvas.width / 2, SCREEN_HEIGHT / 2 + 120, 'tryAgain').setInteractive({ cursor: "pointer" })
       .on('pointerover', () => { this.tryAgain?.setTexture('tryAgainHover') })
@@ -240,7 +321,7 @@ export default class SkiFreeScene extends Phaser.Scene {
         this.initGame(GameStates.PlayGame);
         this.leaderboardText?.forEach((item) => item.destroy())
       });
-    this.tryAgain?.setDepth(2);
+    this.tryAgain?.setDepth(202);
   }
   
 
@@ -248,16 +329,18 @@ export default class SkiFreeScene extends Phaser.Scene {
   preload() {
     this.scale.refresh();
     this.canvas = this.game.canvas;
-    this.load.image('tryAgain', 'assets/try-again.png')
-    this.load.image('tryAgainHover', 'assets/try-again-hover.png')
-    this.load.image('gameOver', 'assets/game-over.png')
-    this.load.image('start', 'assets/start.png')
-    this.load.image('startHover', 'assets/start-hover.png')
-    this.load.image('instructions', 'assets/instructions.png')
-    this.load.image('bg_mtnnear', 'assets/bg_mtnnear.png')
-    this.load.image('bg_mtnfar', 'assets/bg_mtnfar.png')
-    this.load.image('bg_sky', 'assets/bg_sky.png')
-    this.load.image('bg_snow', 'assets/bg_snow.png')
+    this.load.image('muted', 'assets/sound-off.png');
+    this.load.image('unmuted', 'assets/sound-on.png');
+    this.load.image('tryAgain', 'assets/try-again.png');
+    this.load.image('tryAgainHover', 'assets/try-again-hover.png');
+    this.load.image('gameOver', 'assets/game-over.png');
+    this.load.image('start', 'assets/start.png');
+    this.load.image('startHover', 'assets/start-hover.png');
+    this.load.image('instructions', 'assets/instructions.png');
+    this.load.image('bg_mtnnear', 'assets/bg_mtnnear.png');
+    this.load.image('bg_mtnfar', 'assets/bg_mtnfar.png');
+    this.load.image('bg_sky', 'assets/bg_sky.png');
+    this.load.image('bg_snow', 'assets/bg_snow.png');
     this.load.image(HOUSE, 'assets/house.png');
     this.load.image(SNOWMAN, 'assets/snowman.png');
     this.load.image(PORTAL, 'http://labs.phaser.io/assets/sprites/mushroom.png')
@@ -273,6 +356,7 @@ export default class SkiFreeScene extends Phaser.Scene {
     this.load.image(TREE, 'assets/tree.png');
     this.load.image(LITTLE_ROCK, 'assets/rock_little.png');
     this.load.image(BIG_ROCK, 'assets/rock_big.png');
+    this.load.spritesheet(SNOWFLAKES, 'http://labs.phaser.io/assets/sprites/snowflakes.png', { frameWidth: 17, frameHeight: 17 });
     this.load.spritesheet(DINOSAUR, 'assets/dinosaur.png', { frameWidth: 100, frameHeight: 100 });
     this.load.spritesheet(SKIER, 'assets/skier.png', { frameWidth: Player.WIDTH, frameHeight: Player.HEIGHT });
     this.load.spritesheet(WOLF, 'assets/running_wolf_sprite.png', { frameWidth: 563, frameHeight: 265 });
@@ -289,9 +373,22 @@ export default class SkiFreeScene extends Phaser.Scene {
       "assets/arcade.png",
       "assets/arcade.xml"
     );
+    this.load.audio("wind", "assets/blizzard.wav");
+    this.load.audio("click", "assets/click.wav");
+    this.load.audio("ouch", "assets/ouch.m4a");
+    this.load.audio("ski", "assets/ski.m4a");
   }
 
   create() {
+    this.sound.mute = false;
+    this.soundButton = this.createSoundButton();
+
+    const wind_sound = this.sound.add("wind", { loop: true, volume: 0.5 });
+
+    const ENABLE_SKI_SOUND = false;
+    ENABLE_SKI_SOUND && (this.skiSound = this.sound.add("ski", { loop: true, volume: 1 }));
+    wind_sound.play();
+
     this.bg_sky = this.add.tileSprite(0, 0, this.canvas.width, SCREEN_HEIGHT, "bg_sky")
       .setOrigin(0)
     this.bg_mtnfar = this.add.tileSprite(0, 0, this.canvas.width, SCREEN_HEIGHT, "bg_mtnfar")
@@ -304,27 +401,76 @@ export default class SkiFreeScene extends Phaser.Scene {
     // this.add.image(this.canvas.width/2, this.canvas.height/2, "bg_leaderboard");
 
     this.createAnimations();
-    // this.gameState = GameStates.Instructions;
-    this.gameState = GameStates.Leaderboard;
+    this.createSnowflakes();
+    this.gameState = GameStates.Instructions;
+
 
     this.cursors = this.input.keyboard.createCursorKeys();
   }
 
+  private createSnowflakes = () => {
+    if (this.snowflakeEmitter) {
+      return;
+    }
+
+    const topOfCanvas = new Phaser.Geom.Line(0, 0, this.canvas.width * 2, 0);
+    this.snowflakeEmitter = this.add.particles(SNOWFLAKES).setDepth(.5).createEmitter({
+      name: 'snowflakeEmitter',
+      gravityY: 10,
+      //@ts-ignore
+      emitZone: { type: 'random', source: topOfCanvas },
+      lifespan: 10000,
+    }).setScale(0.5);
+  }
+
+  public dt = 0;
+  private updateTime = () => {
+    const currTime = new Date();
+    if (this.lastUpdate) {
+      this.dt = currTime.getTime() - this.lastUpdate.getTime();
+    }
+    this.lastUpdate = currTime;
+  }
+
   private moveBackground = () => {
-    this.bg_snow && (this.bg_snow.tilePositionX -= this.worldToTileUnit(this.gameVelocity));
-    this.bg_mtnnear && (this.bg_mtnnear.tilePositionX -= this.worldToTileUnit(0.9 * this.gameVelocity));
-    this.bg_mtnfar && (this.bg_mtnfar.tilePositionX -= this.worldToTileUnit(0.7 * this.gameVelocity));
-    this.bg_sky && (this.bg_sky.tilePositionX -= this.worldToTileUnit(0.5 * this.gameVelocity));
+    const translate = (velocity: number) => {
+      const fps = 1000 / this.dt;
+      return velocity / fps;
+    }
+
+    this.bg_snow && (this.bg_snow.tilePositionX -= translate(this.gameVelocity));
+    this.bg_mtnnear && (this.bg_mtnnear.tilePositionX -= translate(0.9 * this.gameVelocity));
+    this.bg_mtnfar && (this.bg_mtnfar.tilePositionX -= translate(0.7 * this.gameVelocity));
+    this.bg_sky && (this.bg_sky.tilePositionX -= translate(0.5 * this.gameVelocity));
+  }
+
+  private emitSnowflakes = () => {
+    const { snowflakeEmitter } = this;
+    if (snowflakeEmitter) {
+      snowflakeEmitter.setFrame(Math.floor(6 * Math.random()));
+      snowflakeEmitter.setSpeedX(this.gameVelocity);
+      if (this.gameState == GameStates.GameOver) {
+        snowflakeEmitter.pause();
+      } else {
+        snowflakeEmitter.resume();
+      }
+    }
   }
 
   update() {
-    this.scale.refresh();
+    this.updateTime();
+    this.updateScale();
+    this.emitSnowflakes();
     switch (this.gameState) {
       case GameStates.Instructions:
         this.moveBackground();
         this.createStartMenu();
         break;
       case GameStates.PlayGame:
+        if (this.skiSound && !this.skiSound.isPlaying) {
+          this.skiSound?.play();
+        }
+
         this.moveBackground();
         this.ticks++;
         this.gameVelocity -= 0.1;
@@ -351,6 +497,7 @@ export default class SkiFreeScene extends Phaser.Scene {
         });
         break;
       case GameStates.GameOver:
+        this.skiSound?.stop();
         this.createGameOver();
         // this.scene.start()
         break;
