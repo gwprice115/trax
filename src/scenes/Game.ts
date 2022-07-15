@@ -13,7 +13,8 @@ export const enum GameStates {
   Instructions,
   PlayGame,
   GameOver,
-  GamePaused,
+  Leaderboard,
+  GamePaused
 }
 
 export default class SkiFreeScene extends Phaser.Scene {
@@ -25,6 +26,7 @@ export default class SkiFreeScene extends Phaser.Scene {
   private snowflakeEmitter: Phaser.GameObjects.Particles.ParticleEmitter | undefined;
   public cursors: Phaser.Types.Input.Keyboard.CursorKeys | undefined;
   public gameOver: Phaser.GameObjects.Image | undefined;
+  public leaderboardBox: Phaser.GameObjects.Image | undefined;
   public gamePaused: Phaser.GameObjects.Image | undefined;
   public tryAgain: Phaser.GameObjects.Image | undefined;
   public instructions: Phaser.GameObjects.Image | undefined;
@@ -33,7 +35,19 @@ export default class SkiFreeScene extends Phaser.Scene {
   private skiSound?: Phaser.Sound.BaseSound;
   private soundButton: Phaser.GameObjects.Image | undefined;
 
+  public scoreBitmapText: Phaser.GameObjects.BitmapText|undefined;
+  public playerText: Phaser.GameObjects.BitmapText| undefined; 
+  public playerName: string = ""; // todo: fill in with player name from foundry
+  public currentScore: number = 0;
+  public leaderboardArr: [string, number][] = [["Karp", 9999], ["Karp", 5000], ["Karp", 3900],["Karp", 300],["Karp", 200]];
+  public curRank: number = -1;
+  public leaderboardText: any[] | undefined;
+
   public gameVelocity: number = START_GAME_VELOCITY;
+
+  public BOX_WIDTH = 0;
+  public BOX_HEIGHT = 0;
+  public TITLE_PADDING = 20;
 
   constructor() {
     super('GameScene');
@@ -51,12 +65,17 @@ export default class SkiFreeScene extends Phaser.Scene {
     this.sound.play("ouch");
     this.physics.pause();
     this.anims.pauseAll();
-    this.gameState = GameStates.GameOver;
     this.gameVelocity = START_GAME_VELOCITY;
     this.player?.skiTrailEmitter.pause();
     this.ticks = 0;
     (player as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody).setTint(0xff0000);
     (obstacle as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody).setTint(0xff0000);
+    var result = this.ifHighScore()
+    if (result === -1) {
+      this.gameState = GameStates.GameOver;
+    } else {
+      this.gameState = GameStates.Leaderboard;
+    }
   }
 
   public getSizeWithPerspective = (yPosition: number, baseSize: number) => (baseSize * 0.3 * yPosition / this.canvas.height) + (baseSize * 0.7);
@@ -72,7 +91,7 @@ export default class SkiFreeScene extends Phaser.Scene {
     this.snowflakeEmitter = undefined;
 
     this.player?.destruct();
-    this.registry.get('scoreText')?.destroy();
+    this.scoreBitmapText?.destroy();
   }
 
   public createGameElements = () => {
@@ -98,9 +117,7 @@ export default class SkiFreeScene extends Phaser.Scene {
     this.createSnowflakes();
 
     // load score text
-    const scoreText = this.add.text(16, 16, 'score: 0', { fontSize: '20px', color: '#000' });
-    this.registry.set('scoreText', scoreText);
-    scoreText.setDepth(1)
+    this.scoreBitmapText = this.add.bitmapText(16, 16, "arcadeFont", "Score: 0", 20).setTint(0x000000)
   }
 
   public createAnimations = () => {
@@ -245,6 +262,72 @@ export default class SkiFreeScene extends Phaser.Scene {
     this.tryAgain?.setDepth(2);
   }
 
+  public ifHighScore = () => {
+    for (var i in this.leaderboardArr) {
+      if (this.currentScore >= this.leaderboardArr[i][1]) {
+        this.leaderboardArr.splice(parseInt(i), 0, [this.playerName, this.currentScore])
+        this.leaderboardArr.pop();
+        this.curRank = parseInt(i);
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  displayLeaderboard(){
+    if (this.leaderboardBox) {
+      return;
+    }
+
+    this.leaderboardBox = this.add.image(this.canvas.width/2, this.canvas.height/2, "bg_leaderboard");
+    this.leaderboardBox.setDepth(200);
+
+    this.BOX_WIDTH = this.leaderboardBox.width;
+    this.BOX_HEIGHT = this.leaderboardBox.height;
+    TITLE_PADDING = 20;
+
+    var {BOX_HEIGHT, BOX_WIDTH, TITLE_PADDING} = this;
+
+    this.leaderboardText = []
+
+    this.leaderboardText.push(this.add.bitmapText((this.canvas.width / 2) - BOX_WIDTH / 2 + TITLE_PADDING, BOX_HEIGHT/4, "arcadeFont", "RANK", 15).setTint(0x000000));
+    this.leaderboardText.push(this.add.bitmapText((this.canvas.width / 2) - BOX_WIDTH / 10, BOX_HEIGHT/4, "arcadeFont", "SCORE", 15).setTint(0x000000));
+    this.leaderboardText.push(this.add.bitmapText((this.canvas.width / 2) + BOX_WIDTH / 3 - TITLE_PADDING, BOX_HEIGHT/4, "arcadeFont", "NAME", 15).setTint(0x000000));
+
+    if (this.curRank === -1) {
+      for(let i = 1; i <= 5; i ++){
+        this.leaderboardText.push(this.add.bitmapText((this.canvas.width / 2) - BOX_WIDTH / 2 + TITLE_PADDING, BOX_HEIGHT/4 + i * BOX_HEIGHT / 8, "arcadeFont", i.toString(), 15).setTint(0x000000));
+        this.leaderboardText.push(this.add.bitmapText((this.canvas.width / 2)  - BOX_WIDTH / 10, BOX_HEIGHT/4 + i * BOX_HEIGHT / 8, "arcadeFont",  this.leaderboardArr[i-1][1].toString(), 15).setTint(0x000000));
+        this.leaderboardText.push(this.add.bitmapText((this.canvas.width / 2)  + BOX_WIDTH / 3 - TITLE_PADDING, BOX_HEIGHT/4 + i * BOX_HEIGHT / 8, "arcadeFont", this.leaderboardArr[i-1][0], 15).setTint(0x000000));
+      }
+    } else {
+      for(let i = 1; i <= 5; i ++){
+        this.leaderboardText.push(this.add.bitmapText((this.canvas.width / 2) - BOX_WIDTH / 2 + TITLE_PADDING, BOX_HEIGHT/4 + i * BOX_HEIGHT / 8, "arcadeFont", i.toString(), 15).setTint(0x000000));
+        this.leaderboardText.push(this.add.bitmapText((this.canvas.width / 2)  - BOX_WIDTH / 10, BOX_HEIGHT/4 + i * BOX_HEIGHT / 8, "arcadeFont",  this.leaderboardArr[i-1][1].toString(), 15).setTint(0x000000));
+        if (i !== this.curRank + 1) this.leaderboardText.push(this.add.bitmapText((this.canvas.width / 2)  + BOX_WIDTH / 3 - TITLE_PADDING, BOX_HEIGHT/4 + i * BOX_HEIGHT / 8, "arcadeFont", this.leaderboardArr[i-1][0], 15).setTint(0x000000));
+      }
+    }
+
+    this.leaderboardText.forEach((text) => text.setDepth(201))
+    
+    this.tryAgain = this.add.image(this.canvas.width / 2, SCREEN_HEIGHT / 2 + 120, 'tryAgain').setInteractive({ cursor: "pointer" })
+      .on('pointerover', () => { this.tryAgain?.setTexture('tryAgainHover') })
+      .on('pointerout', () => { this.tryAgain?.setTexture('tryAgain') })
+      .on('pointerup', () => {
+        this.gameOver?.destroy();
+        this.gameOver = undefined;
+        this.tryAgain?.destroy();
+        this.tryAgain = undefined;
+        this.leaderboardBox?.destroy();
+        this.leaderboardBox = undefined;
+        this.initGame(GameStates.PlayGame);
+        this.leaderboardText?.forEach((item) => item.destroy())
+      });
+    this.tryAgain?.setDepth(202);
+  }
+  
+
+
   preload() {
     this.scale.refresh();
     this.canvas = this.game.canvas;
@@ -281,6 +364,18 @@ export default class SkiFreeScene extends Phaser.Scene {
     this.load.spritesheet(SKIER, 'assets/skier.png', { frameWidth: Player.WIDTH, frameHeight: Player.HEIGHT });
     this.load.spritesheet(WOLF, 'assets/running_wolf_sprite.png', { frameWidth: 563, frameHeight: 265 });
     this.load.spritesheet(BEAR, 'assets/bear.png', { frameWidth: 200, frameHeight: 200 });
+    
+    //Leaderboard stuff
+    this.load.image("bg_leaderboard", 'assets/leaderboard-background.png')
+    this.load.image("block", "assets/block.png");
+    this.load.image("rub", "assets/rub.png");
+    this.load.image("end", "assets/end.png");
+
+    this.load.bitmapFont(
+      "arcadeFont",
+      "assets/arcade.png",
+      "assets/arcade.xml"
+    );
     this.load.audio("wind", "assets/blizzard.wav");
     this.load.audio("click", "assets/click.wav");
     this.load.audio("ouch", "assets/ouch.m4a");
@@ -386,8 +481,9 @@ export default class SkiFreeScene extends Phaser.Scene {
         this.moveBackground();
         this.ticks++;
         this.gameVelocity -= 0.05;
-        const score = Math.floor(this.ticks / 10);
-        this.registry.get('scoreText').setText('Score: ' + score);
+        this.currentScore = Math.floor(this.ticks / 10);
+        this.scoreBitmapText?.setText('Score: ' + this.currentScore);
+
         this.player?.update();
         this.spawner?.updateCurveSetter(this.ticks);
         this.spawner?.maybeSpawnObstacle(this.ticks);
@@ -421,6 +517,10 @@ export default class SkiFreeScene extends Phaser.Scene {
       case GameStates.GameOver:
         this.skiSound?.stop();
         this.createGameOver();
+        break;
+      case GameStates.Leaderboard:
+        // TODO: Add logic for putting leaderboard
+        this.displayLeaderboard();
         break;
     }
   }
