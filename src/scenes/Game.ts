@@ -28,14 +28,14 @@ export default class SkiFreeScene extends Phaser.Scene {
   public instructions: Phaser.GameObjects.Image | undefined;
   public start: Phaser.GameObjects.Image | undefined;
   private lastUpdate?: Date;
+  private skiSound?: Phaser.Sound.BaseSound;
+  private unmuted: boolean = true;
 
   public gameVelocity: number = START_GAME_VELOCITY;
 
   constructor() {
     super('GameScene');
   }
-
-  private costume = 'base';
 
   private bg_snow?: Phaser.GameObjects.TileSprite;
   private bg_sky?: Phaser.GameObjects.TileSprite;
@@ -46,6 +46,7 @@ export default class SkiFreeScene extends Phaser.Scene {
   public dynamicObstacles?: Phaser.Physics.Arcade.Group;
 
   private hitObstacle = (player: Phaser.Types.Physics.Arcade.GameObjectWithBody, obstacle: Phaser.Types.Physics.Arcade.GameObjectWithBody) => {
+    this.unmuted && this.sound.play("ouch");
     this.physics.pause();
     this.gameState = GameStates.GameOver;
     this.gameVelocity = START_GAME_VELOCITY;
@@ -147,8 +148,12 @@ export default class SkiFreeScene extends Phaser.Scene {
       .on('pointerover', () => { this.start?.setTexture('startHover') })
       .on('pointerout', () => { this.start?.setTexture('start') })
       .on('pointerup', () => {
-        this.initGame(GameStates.PlayGame); this.instructions?.destroy(); this.instructions = undefined;
-        this.start?.destroy(); this.start = undefined;
+        this.unmuted && this.sound.play("click");
+        this.initGame(GameStates.PlayGame);
+        this.instructions?.destroy();
+        this.instructions = undefined;
+        this.start?.destroy();
+        this.start = undefined;
       });
     this.start?.setDepth(1);
     this.instructions?.setDepth(1);
@@ -162,6 +167,7 @@ export default class SkiFreeScene extends Phaser.Scene {
       .on('pointerover', () => { this.tryAgain?.setTexture('tryAgainHover') })
       .on('pointerout', () => { this.tryAgain?.setTexture('tryAgain') })
       .on('pointerup', () => {
+        this.unmuted && this.sound.play("click");
         this.gameOver?.destroy();
         this.gameOver = undefined;
         this.tryAgain?.destroy();
@@ -205,9 +211,17 @@ export default class SkiFreeScene extends Phaser.Scene {
     this.load.spritesheet(SKIER, 'assets/skier.png', { frameWidth: Player.WIDTH, frameHeight: Player.HEIGHT });
     this.load.spritesheet(WOLF, 'assets/running_wolf_sprite.png', { frameWidth: 563, frameHeight: 265 });
     this.load.spritesheet(BEAR, 'assets/bear.png', { frameWidth: 200, frameHeight: 200 });
+    this.load.audio("wind", "assets/blizzard.wav");
+    this.load.audio("click", "assets/click.wav");
+    this.load.audio("ouch", "assets/ouch.m4a");
+    this.load.audio("ski", "assets/ski.m4a");
   }
 
   create() {
+    const wind_sound = this.sound.add("wind", { loop: true, volume: 0.5 });
+    this.skiSound = this.sound.add("ski", { loop: true, volume: 1 });
+    this.unmuted && wind_sound.play();
+
     this.bg_sky = this.add.tileSprite(0, 0, this.canvas.width, SCREEN_HEIGHT, "bg_sky")
       .setOrigin(0)
     this.bg_mtnfar = this.add.tileSprite(0, 0, this.canvas.width, SCREEN_HEIGHT, "bg_mtnfar")
@@ -231,7 +245,7 @@ export default class SkiFreeScene extends Phaser.Scene {
     }
 
     const topOfCanvas = new Phaser.Geom.Line(0, 0, this.canvas.width * 2, 0);
-    this.snowflakeEmitter = this.add.particles(SNOWFLAKES).setDepth(10000).createEmitter({
+    this.snowflakeEmitter = this.add.particles(SNOWFLAKES).setDepth(.5).createEmitter({
       name: 'snowflakeEmitter',
       gravityY: 10,
       //@ts-ignore
@@ -282,6 +296,10 @@ export default class SkiFreeScene extends Phaser.Scene {
         this.createStartMenu();
         break;
       case GameStates.PlayGame:
+        if (this.unmuted && (!this.skiSound || !this.skiSound.isPlaying)) {
+          this.skiSound?.play();
+        }
+
         this.moveBackground();
         this.ticks++;
         this.gameVelocity -= 0.1;
@@ -308,6 +326,7 @@ export default class SkiFreeScene extends Phaser.Scene {
         });
         break;
       case GameStates.GameOver:
+        this.skiSound?.stop();
         this.createGameOver();
         break;
     }
