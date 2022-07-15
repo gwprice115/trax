@@ -31,10 +31,15 @@ export default class SkiFreeScene extends Phaser.Scene {
   public scoreBitmapText: Phaser.GameObjects.BitmapText|undefined;
   public playerText: Phaser.GameObjects.BitmapText| undefined; 
   public playerName: string = "";
-  public currentScore: number = 0;
+  public currentScore: number = 350;
   public leaderboardArr: [string, number][] = [["Karp", 9999], ["Karp", 5000], ["Karp", 3900],["Karp", 300],["Karp", 100]];
+  public curRank: number = -1;
 
   public gameVelocity: number = START_GAME_VELOCITY;
+
+  public BOX_WIDTH = 0;
+  public BOX_HEIGHT = 0;
+  public TITLE_PADDING = 20;
 
   constructor() {
     super('GameScene');
@@ -170,12 +175,29 @@ export default class SkiFreeScene extends Phaser.Scene {
     this.tryAgain?.setDepth(2);
   }
 
-  public createLeaderboard = () => {
-    if (this.leaderboardBox) return;
-    this.leaderboardBox = this.add.image(this.canvas.width/2, this.canvas.height/2, "bg_leaderboard");
-    this.playerText = this.add.bitmapText(this.canvas.width/2, this.canvas.height/2, "arcadeFont", this.playerName, 20).setTint(0x000000);
-    this.input.keyboard.on("keydown", this.anyKey, this);
+  public inputName = () => {
+    console.log(this.curRank)
+    if (this.playerText) return;
+    var {BOX_HEIGHT, BOX_WIDTH, TITLE_PADDING, curRank} = this;
 
+    console.log(BOX_HEIGHT, BOX_WIDTH, TITLE_PADDING, curRank)
+
+    // this.leaderboardBox = this.add.image(this.canvas.width/2, this.canvas.height/2, "bg_leaderboard");
+    this.playerText = this.add.bitmapText((this.canvas.width / 2)  + BOX_WIDTH / 3 - TITLE_PADDING, BOX_HEIGHT/4 + curRank * BOX_HEIGHT / 8 + TITLE_PADDING + 9, "arcadeFont", this.playerName, 15).setTint(0x000000);
+    this.input.keyboard.on("keydown", this.anyKey, this);
+  }
+
+  public ifHighScore = () => {
+    for (var i in this.leaderboardArr) {
+      if (this.currentScore >= this.leaderboardArr[i][1]) {
+        this.leaderboardArr.splice(parseInt(i), 0, [this.playerName, this.currentScore])
+        this.leaderboardArr.pop();
+        console.log('set cur rank', parseInt(i))
+        this.curRank = parseInt(i);
+        return i;
+      }
+    }
+    return -1;
   }
 
   anyKey(event : any) {
@@ -249,15 +271,51 @@ export default class SkiFreeScene extends Phaser.Scene {
   }
 
   displayLeaderboard(){
-    let padding = this.canvas.height/10; 
-
-    this.add.bitmapText(this.canvas.width * 3/10, this.canvas.height/4, "arcadeFont", "RANK", 15).setTint(0x000000);
-    
-    for(let i = 1; i <= 5; i ++){
-      this.add.bitmapText(this.canvas.width * 3/10 , this.canvas.height/4 + i * padding, "arcadeFont", i.toString(), 15).setTint(0x000000);
-      this.add.bitmapText(this.canvas.width * 3/10 + this.canvas.width/6, this.canvas.height/4 + i * padding, "arcadeFont",  this.leaderboardArr[i-1][1].toString(), 15).setTint(0x000000);
-      this.add.bitmapText(this.canvas.width * 3/10 + 2* this.canvas.width/6, this.canvas.height/4 + i * padding, "arcadeFont", this.leaderboardArr[i-1][0], 15).setTint(0x000000);
+    if (this.leaderboardBox) {
+      this.inputName();
+      return;
     }
+
+    
+    this.leaderboardBox = this.add.image(this.canvas.width/2, this.canvas.height/2, "bg_leaderboard");
+
+    this.BOX_WIDTH = this.leaderboardBox.width;
+    this.BOX_HEIGHT = this.leaderboardBox.height;
+    TITLE_PADDING = 20;
+
+    var {BOX_HEIGHT, BOX_WIDTH, TITLE_PADDING} = this;
+
+    this.add.bitmapText((this.canvas.width / 2) - BOX_WIDTH / 2 + TITLE_PADDING, BOX_HEIGHT/4, "arcadeFont", "RANK", 15).setTint(0x000000);
+    this.add.bitmapText((this.canvas.width / 2) - BOX_WIDTH / 10, BOX_HEIGHT/4, "arcadeFont", "SCORE", 15).setTint(0x000000);
+    this.add.bitmapText((this.canvas.width / 2) + BOX_WIDTH / 3 - TITLE_PADDING, BOX_HEIGHT/4, "arcadeFont", "NAME", 15).setTint(0x000000);
+
+    var index = this.ifHighScore();
+
+    if (index === -1) {
+      for(let i = 1; i <= 5; i ++){
+        this.add.bitmapText((this.canvas.width / 2) - BOX_WIDTH / 2 + TITLE_PADDING, BOX_HEIGHT/4 + i * BOX_HEIGHT / 8, "arcadeFont", i.toString(), 15).setTint(0x000000);
+        this.add.bitmapText((this.canvas.width / 2)  - BOX_WIDTH / 10, BOX_HEIGHT/4 + i * BOX_HEIGHT / 8, "arcadeFont",  this.leaderboardArr[i-1][1].toString(), 15).setTint(0x000000);
+        this.add.bitmapText((this.canvas.width / 2)  + BOX_WIDTH / 3 - TITLE_PADDING, BOX_HEIGHT/4 + i * BOX_HEIGHT / 8, "arcadeFont", this.leaderboardArr[i-1][0], 15).setTint(0x000000);
+      }
+    } else {
+      for(let i = 1; i <= 5; i ++){
+        this.add.bitmapText((this.canvas.width / 2) - BOX_WIDTH / 2 + TITLE_PADDING, BOX_HEIGHT/4 + i * BOX_HEIGHT / 8, "arcadeFont", i.toString(), 15).setTint(0x000000);
+        this.add.bitmapText((this.canvas.width / 2)  - BOX_WIDTH / 10, BOX_HEIGHT/4 + i * BOX_HEIGHT / 8, "arcadeFont",  this.leaderboardArr[i-1][1].toString(), 15).setTint(0x000000);
+        if (i !== index) this.add.bitmapText((this.canvas.width / 2)  + BOX_WIDTH / 3 - TITLE_PADDING, BOX_HEIGHT/4 + i * BOX_HEIGHT / 8, "arcadeFont", this.leaderboardArr[i-1][0], 15).setTint(0x000000);
+      }
+    }
+    
+    this.tryAgain = this.add.image(this.canvas.width / 2, SCREEN_HEIGHT / 2 + 120, 'tryAgain').setInteractive({ cursor: "pointer" })
+      .on('pointerover', () => { this.tryAgain?.setTexture('tryAgainHover') })
+      .on('pointerout', () => { this.tryAgain?.setTexture('tryAgain') })
+      .on('pointerup', () => {
+        this.gameOver?.destroy();
+        this.gameOver = undefined;
+        this.tryAgain?.destroy();
+        this.tryAgain = undefined;
+        this.initGame(GameStates.PlayGame);
+      });
+    this.tryAgain?.setDepth(2);
   }
   
 
@@ -318,7 +376,7 @@ export default class SkiFreeScene extends Phaser.Scene {
     this.bg_snow = this.add.tileSprite(0, 0, this.canvas.width, SCREEN_HEIGHT, "bg_snow")
       .setOrigin(0)
 
-    this.add.image(this.canvas.width/2, this.canvas.height/2, "bg_leaderboard");
+    // this.add.image(this.canvas.width/2, this.canvas.height/2, "bg_leaderboard");
 
     this.createAnimations();
     // this.gameState = GameStates.Instructions;
@@ -374,6 +432,7 @@ export default class SkiFreeScene extends Phaser.Scene {
       case GameStates.Leaderboard:
         // TODO: Add logic for putting leaderboard
         this.displayLeaderboard();
+        // this.createLeaderboard();
         break;
     }
   }
