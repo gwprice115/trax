@@ -261,7 +261,6 @@ export default class SkiFreeScene extends Phaser.Scene {
     this.soundButton && (this.soundButton.x = this.canvas.width - 60);
     this.leaderboardBox && (this.leaderboardBox.x = this.canvas.width / 2);
     this.leaderboardText?.forEach((e) => e.destroy());
-    console.log(this.leaderboardText?.length)
     this.populateLeaderboardText();
   }
 
