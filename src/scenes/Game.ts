@@ -56,7 +56,7 @@ export default class SkiFreeScene extends Phaser.Scene {
 
   public getSizeWithPerspective = (yPosition: number, baseSize: number) => (baseSize * 0.3 * yPosition / this.canvas.height) + (baseSize * 0.7);
 
-  public getSkyHeight = () => this.canvas.height * 0.35;
+  public getSkyHeight = () => this.canvas.height * 0.3;
 
   public destroyGame = () => {
     // destroy previous elements, if they exist
