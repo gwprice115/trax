@@ -59,7 +59,7 @@ const PROBABILITY_WEIGHTS = {
     [PORTAL]: 0,
     [SNOWMAN]: 3,
     [BEAR]: 2,
-    [WOLF]: 1,
+    [WOLF]: 4,
     [DINOSAUR]: 2,
 };
 

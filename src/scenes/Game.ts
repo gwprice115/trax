@@ -1,18 +1,19 @@
 import Phaser, { Game } from 'phaser';
 
-export const GAME_VELOCITY = -60;
 import { WOLF, PORTAL, LITTLE_ROCK, BIG_ROCK, SKIER, Spawner, TREE, SNOWMAN, BEAR, DINOSAUR, TREE_SNOWY_1, TREE_SNOWY_2, STICK, STONE, STONE2, TREE_TRUNK, HOUSE, TREE_EMPTY_1, TREE_EMPTY_2 } from '../Spawner';
 import Player from '../Player';
 import { SCREEN_HEIGHT } from '../config';
 
 export const SKI_TRAIL = 'ski-trail';
-export const START_GAME_VELOCITY = -80;
+export const PAUSED = 'paused';
+export const START_GAME_VELOCITY = -100;
 
 const SNOWFLAKES = 'snowflakes';
 export const enum GameStates {
   Instructions,
   PlayGame,
-  GameOver
+  GameOver,
+  GamePaused,
 }
 
 export default class SkiFreeScene extends Phaser.Scene {
@@ -24,6 +25,7 @@ export default class SkiFreeScene extends Phaser.Scene {
   private snowflakeEmitter: Phaser.GameObjects.Particles.ParticleEmitter | undefined;
   public cursors: Phaser.Types.Input.Keyboard.CursorKeys | undefined;
   public gameOver: Phaser.GameObjects.Image | undefined;
+  public gamePaused: Phaser.GameObjects.Image | undefined;
   public tryAgain: Phaser.GameObjects.Image | undefined;
   public instructions: Phaser.GameObjects.Image | undefined;
   public start: Phaser.GameObjects.Image | undefined;
@@ -48,6 +50,7 @@ export default class SkiFreeScene extends Phaser.Scene {
   private hitObstacle = (player: Phaser.Types.Physics.Arcade.GameObjectWithBody, obstacle: Phaser.Types.Physics.Arcade.GameObjectWithBody) => {
     this.sound.play("ouch");
     this.physics.pause();
+    this.anims.pauseAll();
     this.gameState = GameStates.GameOver;
     this.gameVelocity = START_GAME_VELOCITY;
     this.ticks = 0;
@@ -133,11 +136,11 @@ export default class SkiFreeScene extends Phaser.Scene {
     this.ticks = 0;
     this.gameVelocity = START_GAME_VELOCITY;
     this.gameState = state;
-
     this.destroyGame();
     this.createGameElements();
 
     this.physics.resume();
+    this.anims.resumeAll();
   };
 
   private createSoundButton = () => {
@@ -168,7 +171,6 @@ export default class SkiFreeScene extends Phaser.Scene {
 
   private onStart = () => {
     if (this.gameState != GameStates.Instructions) return;
-
     this.sound.play("click");
     this.initGame(GameStates.PlayGame);
     this.instructions?.destroy();
@@ -185,7 +187,6 @@ export default class SkiFreeScene extends Phaser.Scene {
       .on('pointerover', () => { this.start?.setTexture('startHover') })
       .on('pointerout', () => { this.start?.setTexture('start') })
       .on('pointerup', this.onStart);
-
     this.input.keyboard.addKey("SPACE")
       .on('down', () => { this.start?.setTexture('startHover') })
       .on('up', this.onStart);
@@ -217,6 +218,7 @@ export default class SkiFreeScene extends Phaser.Scene {
 
     this.tryAgain && (this.tryAgain.x = this.canvas.width / 2);
     this.gameOver && (this.gameOver.x = this.canvas.width / 2);
+    this.gamePaused && (this.gamePaused.x = this.canvas.width / 2);
     this.start && (this.start.x = this.canvas.width / 2);
     this.instructions && (this.instructions.x = this.canvas.width / 2);
     this.soundButton && (this.soundButton.x = this.canvas.width - 60);
@@ -257,6 +259,7 @@ export default class SkiFreeScene extends Phaser.Scene {
     this.load.image('bg_mtnfar', 'assets/bg_mtnfar.png');
     this.load.image('bg_sky', 'assets/bg_sky.png');
     this.load.image('bg_snow', 'assets/bg_snow.png');
+    this.load.image(PAUSED, 'assets/paused.png');
     this.load.image(HOUSE, 'assets/house.png');
     this.load.image(SNOWMAN, 'assets/snowman.png');
     this.load.image(PORTAL, 'http://labs.phaser.io/assets/sprites/mushroom.png')
@@ -306,7 +309,6 @@ export default class SkiFreeScene extends Phaser.Scene {
     this.createSnowflakes();
     this.gameState = GameStates.Instructions;
 
-
     this.cursors = this.input.keyboard.createCursorKeys();
   }
 
@@ -351,7 +353,7 @@ export default class SkiFreeScene extends Phaser.Scene {
     if (snowflakeEmitter) {
       snowflakeEmitter.setFrame(Math.floor(6 * Math.random()));
       snowflakeEmitter.setSpeedX(this.gameVelocity);
-      if (this.gameState == GameStates.GameOver) {
+      if (this.gameState == GameStates.GameOver || this.gameState == GameStates.GamePaused) {
         snowflakeEmitter.pause();
       } else {
         snowflakeEmitter.resume();
@@ -372,10 +374,17 @@ export default class SkiFreeScene extends Phaser.Scene {
         if (this.skiSound && !this.skiSound.isPlaying) {
           this.skiSound?.play();
         }
+        this.gamePaused?.destroy();
+        this.gamePaused = undefined;
+        this.physics.resume();
+        this.anims.resumeAll();
+
+        this.input.keyboard.addKey("SPACE")
+          .on('up', () => this.gameState = GameStates.GamePaused);
 
         this.moveBackground();
         this.ticks++;
-        this.gameVelocity -= 0.1;
+        this.gameVelocity -= 0.05;
         const score = Math.floor(this.ticks / 10);
         this.registry.get('scoreText').setText('Score: ' + score);
         this.player?.update();
@@ -397,6 +406,15 @@ export default class SkiFreeScene extends Phaser.Scene {
             this.dynamicObstacles?.remove(typedChild, true, true);
           }
         });
+        break;
+      case GameStates.GamePaused:
+        this.physics.pause();
+        this.anims.pauseAll();
+        this.input.keyboard.addKey("SPACE")
+          .on('up', () => this.gameState = GameStates.PlayGame);
+        if(this.gamePaused == null) {
+          this.gamePaused = this.add.image(this.canvas.width / 2, SCREEN_HEIGHT / 2, PAUSED).setDepth(1);
+        }
         break;
       case GameStates.GameOver:
         this.skiSound?.stop();
