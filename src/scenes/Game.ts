@@ -144,7 +144,7 @@ export default class SkiFreeScene extends Phaser.Scene {
     if (this.soundButton) return;
 
     const createMuteButton = () => {
-      return this.add.image(this.canvas.width - 20, 20, 'unmuted').setInteractive({ cursor: "pointer" })
+      return this.add.image(this.canvas.width - 60, 20, 'unmuted').setInteractive({ cursor: "pointer" })
         .on('pointerup', () => {
           this.sound.play("click");
           this.sound.mute = true;
@@ -154,7 +154,7 @@ export default class SkiFreeScene extends Phaser.Scene {
     }
 
     const createUnmuteButton = () => {
-      return this.add.image(this.canvas.width - 20, 20, 'muted').setInteractive({ cursor: "pointer" })
+      return this.add.image(this.canvas.width - 60, 20, 'muted').setInteractive({ cursor: "pointer" })
         .on('pointerup', () => {
           this.sound.play("click");
           this.sound.mute = false;
