@@ -192,15 +192,18 @@ export default class SkiFreeScene extends Phaser.Scene {
     return this.sound.mute ? createUnmuteButton() : createMuteButton();
   }
 
-  private displayRainbowText = () => {
-    if (!this.rainbowText) this.rainbowText = this.add.bitmapText(this.canvas.width / 2 - 205, SCREEN_HEIGHT / 2 - this.BOX_HEIGHT / 2 - 5, "arcadeFont", "You got a high score!", 20).setTint(0xfff)
+  private displayLeaderboardTitle = () => {
+    if (this.curRank !== -1) {
+      if (!this.rainbowText) this.rainbowText = this.add.bitmapText(this.canvas.width / 2 - 205, SCREEN_HEIGHT / 2 - this.BOX_HEIGHT / 2 - 5, "arcadeFont", "You got a high score!", 20).setTint(0xfff)
+      this.rainbowColor ++;
+      if (this.rainbowColor === 360) this.rainbowColor = 0;
+      const top = Phaser.Display.Color.HSVColorWheel()[this.rainbowColor].color;
+      const bottom = Phaser.Display.Color.HSVColorWheel()[359 - this.rainbowColor].color;
+      this.rainbowText?.setTint(top, bottom, bottom, top)
+    } else {
+      if (!this.rainbowText) this.rainbowText = this.add.bitmapText(this.canvas.width / 2 - 100, SCREEN_HEIGHT / 2 - this.BOX_HEIGHT / 2 - 5, "arcadeFont", "Leaderboard", 20).setTint(0x0)
+    }
     this.rainbowText?.setDepth(300);
-
-    this.rainbowColor ++;
-    if (this.rainbowColor === 360) this.rainbowColor = 0;
-    const top = Phaser.Display.Color.HSVColorWheel()[this.rainbowColor].color;
-    const bottom = Phaser.Display.Color.HSVColorWheel()[359 - this.rainbowColor].color;
-    this.rainbowText?.setTint(top, bottom, bottom, top)
   }
 
   private onStart = () => {
@@ -244,6 +247,8 @@ export default class SkiFreeScene extends Phaser.Scene {
     this.leaderboardButton = undefined;
     this.leaderboardBox?.destroy();
     this.leaderboardBox = undefined;
+    this.rainbowText?.destroy();
+    this.rainbowText = undefined;
     this.leaderboardText?.forEach((e) => e.destroy());
     this.leaderboardText = [];
     this.initGame(GameStates.PlayGame);
@@ -355,7 +360,6 @@ export default class SkiFreeScene extends Phaser.Scene {
 
     this.leaderboardBox = this.add.image(this.canvas.width / 2, this.canvas.height / 2 - 25, "bg_leaderboard");
     this.leaderboardBox.setDepth(200);
-
 
     this.leaderboardText = []
 
@@ -562,7 +566,7 @@ export default class SkiFreeScene extends Phaser.Scene {
       case GameStates.Leaderboard:
         this.skiSound?.stop();
         this.displayLeaderboard();
-        this.displayRainbowText(); 
+        this.displayLeaderboardTitle(); 
         break;
     }
   }
