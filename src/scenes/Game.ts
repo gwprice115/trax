@@ -29,7 +29,7 @@ export default class SkiFreeScene extends Phaser.Scene {
   public start: Phaser.GameObjects.Image | undefined;
   private lastUpdate?: Date;
   private skiSound?: Phaser.Sound.BaseSound;
-  private unmuted: boolean = true;
+  private soundButton: Phaser.GameObjects.Image | undefined;
 
   public gameVelocity: number = START_GAME_VELOCITY;
 
@@ -46,7 +46,7 @@ export default class SkiFreeScene extends Phaser.Scene {
   public dynamicObstacles?: Phaser.Physics.Arcade.Group;
 
   private hitObstacle = (player: Phaser.Types.Physics.Arcade.GameObjectWithBody, obstacle: Phaser.Types.Physics.Arcade.GameObjectWithBody) => {
-    this.unmuted && this.sound.play("ouch");
+    this.sound.play("ouch");
     this.physics.pause();
     this.gameState = GameStates.GameOver;
     this.gameVelocity = START_GAME_VELOCITY;
@@ -140,6 +140,33 @@ export default class SkiFreeScene extends Phaser.Scene {
     this.physics.resume();
   };
 
+  private createSoundButton = () => {
+    if (this.soundButton) return;
+
+    const createMuteButton = () => {
+      return this.add.image(this.canvas.width - 20, 20, 'unmuted').setInteractive({ cursor: "pointer" })
+        .on('pointerup', () => {
+          this.sound.play("click");
+          this.sound.mute = true;
+          this.soundButton?.destroy();
+          this.soundButton = createUnmuteButton();
+        }).setDepth(2);
+    }
+
+    const createUnmuteButton = () => {
+      return this.add.image(this.canvas.width - 20, 20, 'muted').setInteractive({ cursor: "pointer" })
+        .on('pointerup', () => {
+          this.sound.play("click");
+          this.sound.mute = false;
+          this.soundButton?.destroy();
+          this.soundButton = createMuteButton();
+        }).setDepth(2);
+    }
+
+    this.sound.mute ? createUnmuteButton() : createMuteButton();
+
+  }
+
   private createStartMenu = () => {
     if (this.start) return;
 
@@ -148,7 +175,7 @@ export default class SkiFreeScene extends Phaser.Scene {
       .on('pointerover', () => { this.start?.setTexture('startHover') })
       .on('pointerout', () => { this.start?.setTexture('start') })
       .on('pointerup', () => {
-        this.unmuted && this.sound.play("click");
+        this.sound.play("click");
         this.initGame(GameStates.PlayGame);
         this.instructions?.destroy();
         this.instructions = undefined;
@@ -167,7 +194,7 @@ export default class SkiFreeScene extends Phaser.Scene {
       .on('pointerover', () => { this.tryAgain?.setTexture('tryAgainHover') })
       .on('pointerout', () => { this.tryAgain?.setTexture('tryAgain') })
       .on('pointerup', () => {
-        this.unmuted && this.sound.play("click");
+        this.sound.play("click");
         this.gameOver?.destroy();
         this.gameOver = undefined;
         this.tryAgain?.destroy();
@@ -181,16 +208,18 @@ export default class SkiFreeScene extends Phaser.Scene {
   preload() {
     this.scale.refresh();
     this.canvas = this.game.canvas;
-    this.load.image('tryAgain', 'assets/try-again.png')
-    this.load.image('tryAgainHover', 'assets/try-again-hover.png')
-    this.load.image('gameOver', 'assets/game-over.png')
-    this.load.image('start', 'assets/start.png')
-    this.load.image('startHover', 'assets/start-hover.png')
-    this.load.image('instructions', 'assets/instructions.png')
-    this.load.image('bg_mtnnear', 'assets/bg_mtnnear.png')
-    this.load.image('bg_mtnfar', 'assets/bg_mtnfar.png')
-    this.load.image('bg_sky', 'assets/bg_sky.png')
-    this.load.image('bg_snow', 'assets/bg_snow.png')
+    this.load.image('muted', 'assets/sound-off.png');
+    this.load.image('unmuted', 'assets/sound-on.png');
+    this.load.image('tryAgain', 'assets/try-again.png');
+    this.load.image('tryAgainHover', 'assets/try-again-hover.png');
+    this.load.image('gameOver', 'assets/game-over.png');
+    this.load.image('start', 'assets/start.png');
+    this.load.image('startHover', 'assets/start-hover.png');
+    this.load.image('instructions', 'assets/instructions.png');
+    this.load.image('bg_mtnnear', 'assets/bg_mtnnear.png');
+    this.load.image('bg_mtnfar', 'assets/bg_mtnfar.png');
+    this.load.image('bg_sky', 'assets/bg_sky.png');
+    this.load.image('bg_snow', 'assets/bg_snow.png');
     this.load.image(HOUSE, 'assets/house.png');
     this.load.image(SNOWMAN, 'assets/snowman.png');
     this.load.image(PORTAL, 'http://labs.phaser.io/assets/sprites/mushroom.png')
@@ -218,9 +247,12 @@ export default class SkiFreeScene extends Phaser.Scene {
   }
 
   create() {
+    this.sound.mute = false;
+    this.createSoundButton();
+
     const wind_sound = this.sound.add("wind", { loop: true, volume: 0.5 });
     this.skiSound = this.sound.add("ski", { loop: true, volume: 1 });
-    this.unmuted && wind_sound.play();
+    wind_sound.play();
 
     this.bg_sky = this.add.tileSprite(0, 0, this.canvas.width, SCREEN_HEIGHT, "bg_sky")
       .setOrigin(0)
@@ -296,7 +328,7 @@ export default class SkiFreeScene extends Phaser.Scene {
         this.createStartMenu();
         break;
       case GameStates.PlayGame:
-        if (this.unmuted && (!this.skiSound || !this.skiSound.isPlaying)) {
+        if (!this.skiSound || !this.skiSound.isPlaying) {
           this.skiSound?.play();
         }
 
