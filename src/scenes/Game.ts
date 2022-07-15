@@ -23,11 +23,16 @@ export default class SkiFreeScene extends Phaser.Scene {
   private spawner: Spawner | undefined;
   public cursors: Phaser.Types.Input.Keyboard.CursorKeys | undefined;
   public gameOver: Phaser.GameObjects.Image | undefined;
+  public leaderboardBox: Phaser.GameObjects.Image | undefined;
   public tryAgain: Phaser.GameObjects.Image | undefined;
   public instructions: Phaser.GameObjects.Image | undefined;
   public start: Phaser.GameObjects.Image | undefined;
 
   public scoreBitmapText: Phaser.GameObjects.BitmapText|undefined;
+  public playerText: Phaser.GameObjects.BitmapText| undefined; 
+  public playerName: string = "";
+  public currentScore: number = 0;
+  public leaderboardArr: [string, number][] = [["Karp", 9999], ["Karp", 5000], ["Karp", 3900],["Karp", 300],["Karp", 100]];
 
   public gameVelocity: number = START_GAME_VELOCITY;
 
@@ -47,7 +52,7 @@ export default class SkiFreeScene extends Phaser.Scene {
 
   private hitObstacle = (player: Phaser.Types.Physics.Arcade.GameObjectWithBody, obstacle: Phaser.Types.Physics.Arcade.GameObjectWithBody) => {
     this.physics.pause();
-    this.gameState = GameStates.GameOver;
+    this.gameState = GameStates.Leaderboard;
     this.gameVelocity = START_GAME_VELOCITY;
     this.ticks = 0;
     (player as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody).setTint(0xff0000);
@@ -165,6 +170,98 @@ export default class SkiFreeScene extends Phaser.Scene {
     this.tryAgain?.setDepth(2);
   }
 
+  public createLeaderboard = () => {
+    if (this.leaderboardBox) return;
+    this.leaderboardBox = this.add.image(this.canvas.width/2, this.canvas.height/2, "bg_leaderboard");
+    this.playerText = this.add.bitmapText(this.canvas.width/2, this.canvas.height/2, "arcadeFont", this.playerName, 20).setTint(0x000000);
+    this.input.keyboard.on("keydown", this.anyKey, this);
+
+  }
+
+  anyKey(event : any) {
+    //  Only allow A-Z . and -
+
+    let code = event.keyCode;
+    let key = event.key; 
+
+    if (
+      code === Phaser.Input.Keyboard.KeyCodes.BACKSPACE ||
+      code === Phaser.Input.Keyboard.KeyCodes.DELETE
+    ) {
+      this.deleteFromName();
+    } else if (
+      code >= Phaser.Input.Keyboard.KeyCodes.A &&
+      code <= Phaser.Input.Keyboard.KeyCodes.Z
+    ) {
+      this.addToName(event);
+    } else if (
+      code === Phaser.Input.Keyboard.KeyCodes.ENTER
+    ) {
+      this.submitName();
+    }
+  }
+
+  addToName(event: any) {
+    let nameLength = this.playerName.length;
+    let code = event.keyCode
+    let key = event.key
+    if(nameLength < 4){
+      this.playerName = this.playerName.concat(key);
+      this.updateName();
+    }
+    
+    // if (x === this.columns - 1 && y === this.rows - 1 && nameLength > 0) {
+    //   //  Submit
+    //   this.events.emit("submitName", this.name);
+    // } else if (
+    //   x === this.columns - 2 &&
+    //   y === this.rows - 1 &&
+    //   nameLength > 0
+    // ) {
+    //   //  Rub
+    //   this.name = this.name.substr(0, nameLength - 1);
+
+    //   this.events.emit("updateName", this.name);
+    // } else if (this.name.length < this.charLimit) {
+    //   //  Add
+    //   this.name = this.name.concat(this.chars[y][x]);
+
+    //   this.events.emit("updateName", this.name);
+    // }
+  }
+
+  deleteFromName(){
+    let nameLength = this.playerName.length;
+    if(nameLength > 0){
+      this.playerName = this.playerName.substr(0, nameLength-1);
+      this.updateName();
+    }
+  }
+  
+  updateName() {
+    this.playerText?.setText(this.playerName);
+  }
+
+  submitName() {
+    // Finalize name into leaderboard
+
+    this.currentScore = 0;
+  }
+
+  displayLeaderboard(){
+    let padding = this.canvas.height/10; 
+
+    this.add.bitmapText(this.canvas.width * 3/10, this.canvas.height/4, "arcadeFont", "RANK", 15).setTint(0x000000);
+    
+    for(let i = 1; i <= 5; i ++){
+      this.add.bitmapText(this.canvas.width * 3/10 , this.canvas.height/4 + i * padding, "arcadeFont", i.toString(), 15).setTint(0x000000);
+      this.add.bitmapText(this.canvas.width * 3/10 + this.canvas.width/6, this.canvas.height/4 + i * padding, "arcadeFont",  this.leaderboardArr[i-1][1].toString(), 15).setTint(0x000000);
+      this.add.bitmapText(this.canvas.width * 3/10 + 2* this.canvas.width/6, this.canvas.height/4 + i * padding, "arcadeFont", this.leaderboardArr[i-1][0], 15).setTint(0x000000);
+    }
+  }
+  
+
+
   preload() {
     this.scale.refresh();
     this.canvas = this.game.canvas;
@@ -199,6 +296,7 @@ export default class SkiFreeScene extends Phaser.Scene {
     this.load.spritesheet(BEAR, 'assets/bear.png', { frameWidth: 200, frameHeight: 200 });
     
     //Leaderboard stuff
+    this.load.image("bg_leaderboard", 'assets/leaderboard-background.png')
     this.load.image("block", "assets/block.png");
     this.load.image("rub", "assets/rub.png");
     this.load.image("end", "assets/end.png");
@@ -220,8 +318,11 @@ export default class SkiFreeScene extends Phaser.Scene {
     this.bg_snow = this.add.tileSprite(0, 0, this.canvas.width, SCREEN_HEIGHT, "bg_snow")
       .setOrigin(0)
 
+    this.add.image(this.canvas.width/2, this.canvas.height/2, "bg_leaderboard");
+
     this.createAnimations();
-    this.gameState = GameStates.Instructions;
+    // this.gameState = GameStates.Instructions;
+    this.gameState = GameStates.Leaderboard;
 
     this.cursors = this.input.keyboard.createCursorKeys();
   }
@@ -244,8 +345,8 @@ export default class SkiFreeScene extends Phaser.Scene {
         this.moveBackground();
         this.ticks++;
         this.gameVelocity -= 0.1;
-        const score = Math.floor(this.ticks / 10);
-        this.scoreBitmapText?.setText('Score: ' + score);
+        this.currentScore = Math.floor(this.ticks / 10);
+        this.scoreBitmapText?.setText('Score: ' + this.currentScore);
         this.player?.update();
         this.spawner?.updateCurveSetter(this.ticks);
         this.spawner?.maybeSpawnObstacle(this.ticks);
@@ -272,6 +373,7 @@ export default class SkiFreeScene extends Phaser.Scene {
         break;
       case GameStates.Leaderboard:
         // TODO: Add logic for putting leaderboard
+        this.displayLeaderboard();
         break;
     }
   }
