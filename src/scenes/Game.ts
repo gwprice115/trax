@@ -35,8 +35,12 @@ export default class SkiFreeScene extends Phaser.Scene {
   private skiSound?: Phaser.Sound.BaseSound;
   private soundButton: Phaser.GameObjects.Image | undefined;
 
+  public rainbowText: Phaser.GameObjects.BitmapText|undefined;
+  public rainbowColor: number = 0;
+
   public scoreBitmapText: Phaser.GameObjects.BitmapText | undefined;
   public playerText: Phaser.GameObjects.BitmapText | undefined;
+
   public playerName: string = ""; // todo: fill in with player name from foundry
   public currentScore: number = 0;
   public leaderboardArr: [string, number][] = [["Karp", 9999], ["Karp", 5000], ["Karp", 3900], ["Karp", 300], ["Karp", 200]];
@@ -188,6 +192,17 @@ export default class SkiFreeScene extends Phaser.Scene {
     return this.sound.mute ? createUnmuteButton() : createMuteButton();
   }
 
+  private displayRainbowText = () => {
+    if (!this.rainbowText) this.rainbowText = this.add.bitmapText(this.canvas.width / 2 - 205, SCREEN_HEIGHT / 2 - this.BOX_HEIGHT / 2 - 5, "arcadeFont", "You got a high score!", 20).setTint(0xfff)
+    this.rainbowText?.setDepth(300);
+
+    this.rainbowColor ++;
+    if (this.rainbowColor === 360) this.rainbowColor = 0;
+    const top = Phaser.Display.Color.HSVColorWheel()[this.rainbowColor].color;
+    const bottom = Phaser.Display.Color.HSVColorWheel()[359 - this.rainbowColor].color;
+    this.rainbowText?.setTint(top, bottom, bottom, top)
+  }
+
   private onStart = () => {
     if (this.gameState != GameStates.Instructions) return;
     this.sound.play("click");
@@ -308,6 +323,7 @@ export default class SkiFreeScene extends Phaser.Scene {
     this.BOX_HEIGHT = this.leaderboardBox ? this.leaderboardBox.height : 0;
     TITLE_PADDING = 20;
 
+
     this.leaderboardText?.forEach((e) => e.destroy());
     this.leaderboardText = [];
 
@@ -351,8 +367,6 @@ export default class SkiFreeScene extends Phaser.Scene {
       .on('pointerup', this.onTryAgain);
     this.tryAgain?.setDepth(202);
   }
-
-
 
   preload() {
     this.scale.refresh();
@@ -548,6 +562,7 @@ export default class SkiFreeScene extends Phaser.Scene {
       case GameStates.Leaderboard:
         this.skiSound?.stop();
         this.displayLeaderboard();
+        this.displayRainbowText(); 
         break;
     }
   }
