@@ -1,18 +1,19 @@
 import Phaser from 'phaser'
 import SkiFreeScene from '../scenes/Game';
 
-export default class Tracking extends Phaser.Physics.Arcade.Sprite
-{
+export default class Tracking extends Phaser.Physics.Arcade.Sprite {
 	private player: Phaser.Types.Physics.Arcade.GameObjectWithBody;
 	private gameScene: SkiFreeScene;
+	private setDepthFunction: (y: number) => number;
 
-	constructor(scene: SkiFreeScene, x: number, y: number, texture: string, player: Phaser.Types.Physics.Arcade.GameObjectWithBody) {
+	constructor(scene: SkiFreeScene, x: number, y: number, setDepthFunction: (y: number) => number, texture: string, player: Phaser.Types.Physics.Arcade.GameObjectWithBody) {
 		super(scene, x, y, texture)
 		this.player = player;
 		scene.add.existing(this);
 		scene.physics.add.existing(this);
 		this.play(texture);
 		this.gameScene = scene;
+		this.setDepthFunction = setDepthFunction;
 
 		this.displayHeight = this.height * 0.8;
 		this.scaleX = this.scaleY;
@@ -37,5 +38,6 @@ export default class Tracking extends Phaser.Physics.Arcade.Sprite
 
 	update() {
 		this.trackPlayer()
+		this.setDepthFunction(this.y + this.height / 2);
 	}
 }
