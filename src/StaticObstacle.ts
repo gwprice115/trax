@@ -2,17 +2,18 @@ import Phaser from 'phaser'
 import SkiFreeScene from './scenes/Game'
 import { BIG_ROCK, DINOSAUR, HOUSE, LITTLE_ROCK, STICK, STONE, STONE2, TREE, TREE_EMPTY_1, TREE_EMPTY_2, TREE_SNOWY_1, TREE_SNOWY_2, TREE_TRUNK } from './Spawner';
 
-export default class StaticObstacle extends Phaser.Physics.Arcade.Sprite
-{
+export default class StaticObstacle extends Phaser.Physics.Arcade.Sprite {
 	private gameScene: SkiFreeScene;
-	constructor(scene: SkiFreeScene, x: number, y: number, texture: string) {
+
+	constructor(scene: SkiFreeScene, x: number, y: number, setDepthFunction: (y: number) => number, texture: string) {
 		super(scene, x, y, texture)
 		scene.add.existing(this);
 		scene.physics.add.existing(this);
 		this.gameScene = scene;
 
-        this.displayHeight = this.gameScene.getSizeWithPerspective(this.y, this.height) - Math.random() * 0.3 * this.height // random small variations in size
-        this.scaleX = this.scaleY;
+		this.displayHeight = this.gameScene.getSizeWithPerspective(this.y, this.height) - Math.random() * 0.3 * this.height // random small variations in size
+		this.scaleX = this.scaleY;
+		this.depth = setDepthFunction(this.y + this.height / 2);
 
 		switch (texture) {
 			case TREE:
