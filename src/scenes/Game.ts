@@ -1,4 +1,4 @@
-import Phaser from 'phaser';
+import Phaser, { Game } from 'phaser';
 
 export const GAME_VELOCITY = -60;
 import { WOLF, PORTAL, LITTLE_ROCK, BIG_ROCK, SKIER, Spawner, TREE, SNOWMAN, BEAR, DINOSAUR, TREE_SNOWY_1, TREE_SNOWY_2, STICK, STONE, STONE2, TREE_TRUNK, HOUSE, TREE_EMPTY_1, TREE_EMPTY_2 } from '../Spawner';
@@ -163,11 +163,12 @@ export default class SkiFreeScene extends Phaser.Scene {
         }).setDepth(2);
     }
 
-    this.sound.mute ? createUnmuteButton() : createMuteButton();
-
+    return this.sound.mute ? createUnmuteButton() : createMuteButton();
   }
 
   private onStart = () => {
+    if (this.gameState != GameStates.Instructions) return;
+
     this.sound.play("click");
     this.initGame(GameStates.PlayGame);
     this.instructions?.destroy();
@@ -179,12 +180,12 @@ export default class SkiFreeScene extends Phaser.Scene {
   private createStartMenu = () => {
     if (this.start) return;
 
-    this.instructions = this.add.image(this.canvas.width / 2, SCREEN_HEIGHT / 3 + 10, 'instructions')
-    this.start = this.add.image(this.canvas.width / 2, SCREEN_HEIGHT / 2 + 10, 'start').setInteractive({ cursor: "pointer" })
+    this.instructions = this.add.image(this.canvas.width / 2, SCREEN_HEIGHT / 3 + 20, 'instructions')
+    this.start = this.add.image(this.canvas.width / 2, SCREEN_HEIGHT / 2 + 30, 'start').setInteractive({ cursor: "pointer" })
       .on('pointerover', () => { this.start?.setTexture('startHover') })
       .on('pointerout', () => { this.start?.setTexture('start') })
       .on('pointerup', this.onStart);
-    
+
     this.input.keyboard.addKey("SPACE")
       .on('down', () => { this.start?.setTexture('startHover') })
       .on('up', this.onStart);
@@ -198,12 +199,27 @@ export default class SkiFreeScene extends Phaser.Scene {
   }
 
   private onTryAgain = () => {
+    if (this.gameState != GameStates.GameOver) return;
     this.sound.play("click");
     this.gameOver?.destroy();
     this.gameOver = undefined;
     this.tryAgain?.destroy();
     this.tryAgain = undefined;
     this.initGame(GameStates.PlayGame);
+  }
+
+  private updateScale() {
+    this.scale.refresh();
+    this.bg_mtnnear && (this.bg_mtnnear.width = this.canvas.width);
+    this.bg_mtnfar && (this.bg_mtnfar.width = this.canvas.width);
+    this.bg_snow && (this.bg_snow.width = this.canvas.width);
+    this.bg_sky && (this.bg_sky.width = this.canvas.width);
+
+    this.tryAgain && (this.tryAgain.x = this.canvas.width / 2);
+    this.gameOver && (this.gameOver.x = this.canvas.width / 2);
+    this.start && (this.start.x = this.canvas.width / 2);
+    this.instructions && (this.instructions.x = this.canvas.width / 2);
+    this.soundButton && (this.soundButton.x = this.canvas.width - 60);
   }
 
   private createGameOver = () => {
@@ -269,7 +285,7 @@ export default class SkiFreeScene extends Phaser.Scene {
 
   create() {
     this.sound.mute = false;
-    this.createSoundButton();
+    this.soundButton = this.createSoundButton();
 
     const wind_sound = this.sound.add("wind", { loop: true, volume: 0.5 });
 
@@ -345,7 +361,7 @@ export default class SkiFreeScene extends Phaser.Scene {
 
   update() {
     this.updateTime();
-    this.scale.refresh();
+    this.updateScale();
     this.emitSnowflakes();
     switch (this.gameState) {
       case GameStates.Instructions:
