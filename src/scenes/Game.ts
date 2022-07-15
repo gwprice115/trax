@@ -35,14 +35,14 @@ export default class SkiFreeScene extends Phaser.Scene {
   private skiSound?: Phaser.Sound.BaseSound;
   private soundButton: Phaser.GameObjects.Image | undefined;
 
-  public scoreBitmapText: Phaser.GameObjects.BitmapText|undefined;
-  public playerText: Phaser.GameObjects.BitmapText| undefined; 
+  public scoreBitmapText: Phaser.GameObjects.BitmapText | undefined;
+  public playerText: Phaser.GameObjects.BitmapText | undefined;
   public playerName: string = ""; // todo: fill in with player name from foundry
   public currentScore: number = 0;
-  public leaderboardArr: [string, number][] = [["Karp", 9999], ["Karp", 5000], ["Karp", 3900],["Karp", 300],["Karp", 200]];
+  public leaderboardArr: [string, number][] = [["Karp", 9999], ["Karp", 5000], ["Karp", 3900], ["Karp", 300], ["Karp", 200]];
   public curRank: number = -1;
   public leaderboardText: any[] | undefined;
-  public leaderboardButton: Phaser.GameObjects.Image | undefined; 
+  public leaderboardButton: Phaser.GameObjects.Image | undefined;
 
   public gameVelocity: number = START_GAME_VELOCITY;
 
@@ -118,7 +118,7 @@ export default class SkiFreeScene extends Phaser.Scene {
     this.createSnowflakes();
 
     // load score text
-    this.scoreBitmapText = this.add.bitmapText(16, 16, "arcadeFont", "Score: 0", 20).setTint(0x000000)
+    this.scoreBitmapText = this.add.bitmapText(16, 16, "arcadeFont", "Score: 0", 20).setTint(0x000000).setDepth(2);
   }
 
   public createAnimations = () => {
@@ -226,7 +226,7 @@ export default class SkiFreeScene extends Phaser.Scene {
     this.tryAgain?.destroy();
     this.tryAgain = undefined;
     this.leaderboardButton?.destroy();
-    this.leaderboardButton = undefined; 
+    this.leaderboardButton = undefined;
     this.initGame(GameStates.PlayGame);
   }
 
@@ -237,7 +237,7 @@ export default class SkiFreeScene extends Phaser.Scene {
     this.tryAgain?.destroy();
     this.tryAgain = undefined;
     this.leaderboardButton?.destroy();
-    this.leaderboardButton = undefined; 
+    this.leaderboardButton = undefined;
     this.gameState = GameStates.Leaderboard;
   }
 
@@ -250,24 +250,27 @@ export default class SkiFreeScene extends Phaser.Scene {
 
     this.tryAgain && (this.tryAgain.x = this.canvas.width / 2);
     this.gameOver && (this.gameOver.x = this.canvas.width / 2);
-    this.leaderboardButton && (this.leaderboardButton.x = this.canvas.width/2);
+    this.leaderboardButton && (this.leaderboardButton.x = this.canvas.width / 2);
     this.gamePaused && (this.gamePaused.x = this.canvas.width / 2);
     this.start && (this.start.x = this.canvas.width / 2);
     this.instructions && (this.instructions.x = this.canvas.width / 2);
     this.soundButton && (this.soundButton.x = this.canvas.width - 60);
+    this.leaderboardBox && (this.leaderboardBox.x = this.canvas.width / 2);
+    this.leaderboardText?.forEach((e) => e.destroy());
+    this.populateLeaderboardText();
   }
 
   private createGameOver = () => {
     if (this.gameOver) return;
     this.gameOver = this.add.image(this.canvas.width / 2, SCREEN_HEIGHT / 2, 'gameOver');
-    this.tryAgain = this.add.image(this.canvas.width / 2, SCREEN_HEIGHT / 2 , 'tryAgain').setInteractive({ cursor: "pointer" })
+    this.tryAgain = this.add.image(this.canvas.width / 2, SCREEN_HEIGHT / 2, 'tryAgain').setInteractive({ cursor: "pointer" })
       .on('pointerover', () => { this.tryAgain?.setTexture('tryAgainHover') })
       .on('pointerout', () => { this.tryAgain?.setTexture('tryAgain') })
       .on('pointerup', this.onTryAgain);
 
-    this.leaderboardButton = this.add.image(this.canvas.width/2, SCREEN_HEIGHT/2 + 60, "leaderboard_button").setInteractive({ cursor: "pointer"})
+    this.leaderboardButton = this.add.image(this.canvas.width / 2, SCREEN_HEIGHT / 2 + 60, "leaderboard_button").setInteractive({ cursor: "pointer" })
       .on('pointerup', this.onLeaderboard);
-    
+
 
     this.input.keyboard.addKey("SPACE")
       .on('down', () => { this.tryAgain?.setTexture('tryAgainHover') })
@@ -294,44 +297,48 @@ export default class SkiFreeScene extends Phaser.Scene {
     return -1;
   }
 
-  
+  private populateLeaderboardText() {
+    if (!this.leaderboardText) return;
 
-  displayLeaderboard(){
+    this.BOX_WIDTH = this.leaderboardBox ? this.leaderboardBox.width : 0;
+    this.BOX_HEIGHT = this.leaderboardBox ? this.leaderboardBox.height : 0;
+    TITLE_PADDING = 20;
+
+    var { BOX_HEIGHT, BOX_WIDTH, TITLE_PADDING } = this;
+    this.leaderboardText.push(this.add.bitmapText((this.canvas.width / 2) - BOX_WIDTH / 2 + TITLE_PADDING, BOX_HEIGHT / 4, "arcadeFont", "RANK", 15).setTint(0x000000));
+    this.leaderboardText.push(this.add.bitmapText((this.canvas.width / 2) - BOX_WIDTH / 10, BOX_HEIGHT / 4, "arcadeFont", "SCORE", 15).setTint(0x000000));
+    this.leaderboardText.push(this.add.bitmapText((this.canvas.width / 2) + BOX_WIDTH / 3 - TITLE_PADDING, BOX_HEIGHT / 4, "arcadeFont", "NAME", 15).setTint(0x000000));
+
+    if (this.curRank === -1) {
+      for (let i = 1; i <= 5; i++) {
+        this.leaderboardText.push(this.add.bitmapText((this.canvas.width / 2) - BOX_WIDTH / 2 + TITLE_PADDING, BOX_HEIGHT / 4 + i * BOX_HEIGHT / 8, "arcadeFont", i.toString(), 15).setTint(0x000000));
+        this.leaderboardText.push(this.add.bitmapText((this.canvas.width / 2) - BOX_WIDTH / 10, BOX_HEIGHT / 4 + i * BOX_HEIGHT / 8, "arcadeFont", this.leaderboardArr[i - 1][1].toString(), 15).setTint(0x000000));
+        this.leaderboardText.push(this.add.bitmapText((this.canvas.width / 2) + BOX_WIDTH / 3 - TITLE_PADDING, BOX_HEIGHT / 4 + i * BOX_HEIGHT / 8, "arcadeFont", this.leaderboardArr[i - 1][0], 15).setTint(0x000000));
+      }
+    } else {
+      for (let i = 1; i <= 5; i++) {
+        this.leaderboardText.push(this.add.bitmapText((this.canvas.width / 2) - BOX_WIDTH / 2 + TITLE_PADDING, BOX_HEIGHT / 4 + i * BOX_HEIGHT / 8, "arcadeFont", i.toString(), 15).setTint(0x000000));
+        this.leaderboardText.push(this.add.bitmapText((this.canvas.width / 2) - BOX_WIDTH / 10, BOX_HEIGHT / 4 + i * BOX_HEIGHT / 8, "arcadeFont", this.leaderboardArr[i - 1][1].toString(), 15).setTint(0x000000));
+        if (i !== this.curRank + 1) this.leaderboardText.push(this.add.bitmapText((this.canvas.width / 2) + BOX_WIDTH / 3 - TITLE_PADDING, BOX_HEIGHT / 4 + i * BOX_HEIGHT / 8, "arcadeFont", this.leaderboardArr[i - 1][0], 15).setTint(0x000000));
+      }
+    }
+    this.leaderboardText.forEach((text) => text.setDepth(201))
+  }
+
+  displayLeaderboard() {
     if (this.leaderboardBox) {
       return;
     }
 
-    this.leaderboardBox = this.add.image(this.canvas.width/2, this.canvas.height/2, "bg_leaderboard");
+    this.leaderboardBox = this.add.image(this.canvas.width / 2, this.canvas.height / 2, "bg_leaderboard");
     this.leaderboardBox.setDepth(200);
 
-    this.BOX_WIDTH = this.leaderboardBox.width;
-    this.BOX_HEIGHT = this.leaderboardBox.height;
-    TITLE_PADDING = 20;
-
-    var {BOX_HEIGHT, BOX_WIDTH, TITLE_PADDING} = this;
 
     this.leaderboardText = []
 
-    this.leaderboardText.push(this.add.bitmapText((this.canvas.width / 2) - BOX_WIDTH / 2 + TITLE_PADDING, BOX_HEIGHT/4, "arcadeFont", "RANK", 15).setTint(0x000000));
-    this.leaderboardText.push(this.add.bitmapText((this.canvas.width / 2) - BOX_WIDTH / 10, BOX_HEIGHT/4, "arcadeFont", "SCORE", 15).setTint(0x000000));
-    this.leaderboardText.push(this.add.bitmapText((this.canvas.width / 2) + BOX_WIDTH / 3 - TITLE_PADDING, BOX_HEIGHT/4, "arcadeFont", "NAME", 15).setTint(0x000000));
+    this.populateLeaderboardText();
 
-    if (this.curRank === -1) {
-      for(let i = 1; i <= 5; i ++){
-        this.leaderboardText.push(this.add.bitmapText((this.canvas.width / 2) - BOX_WIDTH / 2 + TITLE_PADDING, BOX_HEIGHT/4 + i * BOX_HEIGHT / 8, "arcadeFont", i.toString(), 15).setTint(0x000000));
-        this.leaderboardText.push(this.add.bitmapText((this.canvas.width / 2)  - BOX_WIDTH / 10, BOX_HEIGHT/4 + i * BOX_HEIGHT / 8, "arcadeFont",  this.leaderboardArr[i-1][1].toString(), 15).setTint(0x000000));
-        this.leaderboardText.push(this.add.bitmapText((this.canvas.width / 2)  + BOX_WIDTH / 3 - TITLE_PADDING, BOX_HEIGHT/4 + i * BOX_HEIGHT / 8, "arcadeFont", this.leaderboardArr[i-1][0], 15).setTint(0x000000));
-      }
-    } else {
-      for(let i = 1; i <= 5; i ++){
-        this.leaderboardText.push(this.add.bitmapText((this.canvas.width / 2) - BOX_WIDTH / 2 + TITLE_PADDING, BOX_HEIGHT/4 + i * BOX_HEIGHT / 8, "arcadeFont", i.toString(), 15).setTint(0x000000));
-        this.leaderboardText.push(this.add.bitmapText((this.canvas.width / 2)  - BOX_WIDTH / 10, BOX_HEIGHT/4 + i * BOX_HEIGHT / 8, "arcadeFont",  this.leaderboardArr[i-1][1].toString(), 15).setTint(0x000000));
-        if (i !== this.curRank + 1) this.leaderboardText.push(this.add.bitmapText((this.canvas.width / 2)  + BOX_WIDTH / 3 - TITLE_PADDING, BOX_HEIGHT/4 + i * BOX_HEIGHT / 8, "arcadeFont", this.leaderboardArr[i-1][0], 15).setTint(0x000000));
-      }
-    }
 
-    this.leaderboardText.forEach((text) => text.setDepth(201))
-    
     this.tryAgain = this.add.image(this.canvas.width / 2, SCREEN_HEIGHT / 2 + 120, 'tryAgain').setInteractive({ cursor: "pointer" })
       .on('pointerover', () => { this.tryAgain?.setTexture('tryAgainHover') })
       .on('pointerout', () => { this.tryAgain?.setTexture('tryAgain') })
@@ -347,7 +354,7 @@ export default class SkiFreeScene extends Phaser.Scene {
       });
     this.tryAgain?.setDepth(202);
   }
-  
+
 
 
   preload() {
@@ -386,7 +393,7 @@ export default class SkiFreeScene extends Phaser.Scene {
     this.load.spritesheet(SKIER, 'assets/skier.png', { frameWidth: Player.WIDTH, frameHeight: Player.HEIGHT });
     this.load.spritesheet(WOLF, 'assets/running_wolf_sprite.png', { frameWidth: 563, frameHeight: 265 });
     this.load.spritesheet(BEAR, 'assets/bear.png', { frameWidth: 200, frameHeight: 200 });
-    
+
     //Leaderboard stuff
     this.load.image("bg_leaderboard", 'assets/leaderboard-background.png')
     this.load.image("block", "assets/block.png");
@@ -533,7 +540,7 @@ export default class SkiFreeScene extends Phaser.Scene {
         this.player?.skiTrailEmitter.pause();
         this.input.keyboard.addKey("SPACE")
           .on('up', () => this.gameState = GameStates.PlayGame);
-        if(this.gamePaused == null) {
+        if (this.gamePaused == null) {
           this.gamePaused = this.add.image(this.canvas.width / 2, SCREEN_HEIGHT / 2, PAUSED).setDepth(1);
         }
         break;
