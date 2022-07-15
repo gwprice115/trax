@@ -81,7 +81,7 @@ export class Spawner {
         this.curveSetter.body.checkCollision.up = this.curveSetter.body.checkCollision.down = true;
         this.curveSetter.displayHeight = Player.DISPLAY_HEIGHT;
         if (!SHOW_CURVE_SETTER) {
-            this.curveSetter.disableBody(false, true);
+            this.curveSetter.alpha = 0
         }
     } 
 
