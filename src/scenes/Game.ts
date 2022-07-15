@@ -75,7 +75,7 @@ export default class SkiFreeScene extends Phaser.Scene {
     if (!this.spawner) {
       this.spawner = new Spawner(this);
     }
-    this.player = new Player(this, 100, 450, SKIER);
+    this.player = new Player(this, 100, (this.canvas.height - this.getSkyHeight()) / 2 + this.getSkyHeight(), SKIER);
 
     // set up static and dynamic obstacle groups
     this.staticObstacles = this.physics.add.group({
@@ -167,6 +167,15 @@ export default class SkiFreeScene extends Phaser.Scene {
 
   }
 
+  private onStart = () => {
+    this.sound.play("click");
+    this.initGame(GameStates.PlayGame);
+    this.instructions?.destroy();
+    this.instructions = undefined;
+    this.start?.destroy();
+    this.start = undefined;
+  }
+
   private createStartMenu = () => {
     if (this.start) return;
 
@@ -174,33 +183,45 @@ export default class SkiFreeScene extends Phaser.Scene {
     this.start = this.add.image(this.canvas.width / 2, SCREEN_HEIGHT / 2 + 10, 'start').setInteractive({ cursor: "pointer" })
       .on('pointerover', () => { this.start?.setTexture('startHover') })
       .on('pointerout', () => { this.start?.setTexture('start') })
-      .on('pointerup', () => {
-        this.sound.play("click");
-        this.initGame(GameStates.PlayGame);
-        this.instructions?.destroy();
-        this.instructions = undefined;
-        this.start?.destroy();
-        this.start = undefined;
-      });
+      .on('pointerup', this.onStart);
+    
+    this.input.keyboard.addKey("SPACE")
+      .on('down', () => { this.start?.setTexture('startHover') })
+      .on('up', this.onStart);
+
+    this.input.keyboard.addKey("ENTER")
+      .on('down', () => { this.start?.setTexture('startHover') })
+      .on('up', this.onStart);
+
     this.start?.setDepth(1);
     this.instructions?.setDepth(1);
   }
 
+  private onTryAgain = () => {
+    this.sound.play("click");
+    this.gameOver?.destroy();
+    this.gameOver = undefined;
+    this.tryAgain?.destroy();
+    this.tryAgain = undefined;
+    this.initGame(GameStates.PlayGame);
+  }
+
   private createGameOver = () => {
     if (this.gameOver) return;
-    // create tryAgain button
     this.gameOver = this.add.image(this.canvas.width / 2, SCREEN_HEIGHT / 2, 'gameOver');
     this.tryAgain = this.add.image(this.canvas.width / 2, SCREEN_HEIGHT / 2 + 35, 'tryAgain').setInteractive({ cursor: "pointer" })
       .on('pointerover', () => { this.tryAgain?.setTexture('tryAgainHover') })
       .on('pointerout', () => { this.tryAgain?.setTexture('tryAgain') })
-      .on('pointerup', () => {
-        this.sound.play("click");
-        this.gameOver?.destroy();
-        this.gameOver = undefined;
-        this.tryAgain?.destroy();
-        this.tryAgain = undefined;
-        this.initGame(GameStates.PlayGame);
-      });
+      .on('pointerup', this.onTryAgain);
+
+    this.input.keyboard.addKey("SPACE")
+      .on('down', () => { this.tryAgain?.setTexture('tryAgainHover') })
+      .on('up', this.onTryAgain);
+
+    this.input.keyboard.addKey("ENTER")
+      .on('down', () => { this.tryAgain?.setTexture('tryAgainHover') })
+      .on('up', this.onTryAgain);
+
     this.gameOver?.setDepth(1);
     this.tryAgain?.setDepth(2);
   }
@@ -251,7 +272,9 @@ export default class SkiFreeScene extends Phaser.Scene {
     this.createSoundButton();
 
     const wind_sound = this.sound.add("wind", { loop: true, volume: 0.5 });
-    this.skiSound = this.sound.add("ski", { loop: true, volume: 1 });
+
+    const ENABLE_SKI_SOUND = false;
+    ENABLE_SKI_SOUND && (this.skiSound = this.sound.add("ski", { loop: true, volume: 1 }));
     wind_sound.play();
 
     this.bg_sky = this.add.tileSprite(0, 0, this.canvas.width, SCREEN_HEIGHT, "bg_sky")
@@ -330,7 +353,7 @@ export default class SkiFreeScene extends Phaser.Scene {
         this.createStartMenu();
         break;
       case GameStates.PlayGame:
-        if (!this.skiSound || !this.skiSound.isPlaying) {
+        if (this.skiSound && !this.skiSound.isPlaying) {
           this.skiSound?.play();
         }
 
