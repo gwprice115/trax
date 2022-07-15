@@ -318,6 +318,7 @@ export default class SkiFreeScene extends Phaser.Scene {
         return i;
       }
     }
+    this.curRank = -1;
     return -1;
   }
 
