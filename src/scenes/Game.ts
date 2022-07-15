@@ -353,7 +353,7 @@ export default class SkiFreeScene extends Phaser.Scene {
       return;
     }
 
-    this.leaderboardBox = this.add.image(this.canvas.width / 2, this.canvas.height / 2, "bg_leaderboard");
+    this.leaderboardBox = this.add.image(this.canvas.width / 2, this.canvas.height / 2 - 25, "bg_leaderboard");
     this.leaderboardBox.setDepth(200);
 
 
