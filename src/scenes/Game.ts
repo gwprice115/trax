@@ -42,6 +42,7 @@ export default class SkiFreeScene extends Phaser.Scene {
   public leaderboardArr: [string, number][] = [["Karp", 9999], ["Karp", 5000], ["Karp", 3900],["Karp", 300],["Karp", 200]];
   public curRank: number = -1;
   public leaderboardText: any[] | undefined;
+  public leaderboardButton: Phaser.GameObjects.Image | undefined; 
 
   public gameVelocity: number = START_GAME_VELOCITY;
 
@@ -224,7 +225,20 @@ export default class SkiFreeScene extends Phaser.Scene {
     this.gameOver = undefined;
     this.tryAgain?.destroy();
     this.tryAgain = undefined;
+    this.leaderboardButton?.destroy();
+    this.leaderboardButton = undefined; 
     this.initGame(GameStates.PlayGame);
+  }
+
+  private onLeaderboard = () => {
+    this.sound?.play("click");
+    this.gameOver?.destroy();
+    this.gameOver = undefined;
+    this.tryAgain?.destroy();
+    this.tryAgain = undefined;
+    this.leaderboardButton?.destroy();
+    this.leaderboardButton = undefined; 
+    this.gameState = GameStates.Leaderboard;
   }
 
   private updateScale() {
@@ -236,6 +250,7 @@ export default class SkiFreeScene extends Phaser.Scene {
 
     this.tryAgain && (this.tryAgain.x = this.canvas.width / 2);
     this.gameOver && (this.gameOver.x = this.canvas.width / 2);
+    this.leaderboardButton && (this.leaderboardButton.x = this.canvas.width/2);
     this.gamePaused && (this.gamePaused.x = this.canvas.width / 2);
     this.start && (this.start.x = this.canvas.width / 2);
     this.instructions && (this.instructions.x = this.canvas.width / 2);
@@ -245,10 +260,14 @@ export default class SkiFreeScene extends Phaser.Scene {
   private createGameOver = () => {
     if (this.gameOver) return;
     this.gameOver = this.add.image(this.canvas.width / 2, SCREEN_HEIGHT / 2, 'gameOver');
-    this.tryAgain = this.add.image(this.canvas.width / 2, SCREEN_HEIGHT / 2 + 35, 'tryAgain').setInteractive({ cursor: "pointer" })
+    this.tryAgain = this.add.image(this.canvas.width / 2, SCREEN_HEIGHT / 2 , 'tryAgain').setInteractive({ cursor: "pointer" })
       .on('pointerover', () => { this.tryAgain?.setTexture('tryAgainHover') })
       .on('pointerout', () => { this.tryAgain?.setTexture('tryAgain') })
       .on('pointerup', this.onTryAgain);
+
+    this.leaderboardButton = this.add.image(this.canvas.width/2, SCREEN_HEIGHT/2 + 60, "leaderboard_button").setInteractive({ cursor: "pointer"})
+      .on('pointerup', this.onLeaderboard);
+    
 
     this.input.keyboard.addKey("SPACE")
       .on('down', () => { this.tryAgain?.setTexture('tryAgainHover') })
@@ -260,6 +279,7 @@ export default class SkiFreeScene extends Phaser.Scene {
 
     this.gameOver?.setDepth(1);
     this.tryAgain?.setDepth(2);
+    this.leaderboardButton?.setDepth(2);
   }
 
   public ifHighScore = () => {
@@ -273,6 +293,8 @@ export default class SkiFreeScene extends Phaser.Scene {
     }
     return -1;
   }
+
+  
 
   displayLeaderboard(){
     if (this.leaderboardBox) {
@@ -370,6 +392,7 @@ export default class SkiFreeScene extends Phaser.Scene {
     this.load.image("block", "assets/block.png");
     this.load.image("rub", "assets/rub.png");
     this.load.image("end", "assets/end.png");
+    this.load.image("leaderboard_button", "assets/leaderboard-button.png");
 
     this.load.bitmapFont(
       "arcadeFont",
@@ -519,7 +542,7 @@ export default class SkiFreeScene extends Phaser.Scene {
         this.createGameOver();
         break;
       case GameStates.Leaderboard:
-        // TODO: Add logic for putting leaderboard
+        this.skiSound?.stop();
         this.displayLeaderboard();
         break;
     }
