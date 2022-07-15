@@ -96,7 +96,6 @@ export class Spawner {
         } else {
             this.curveSetter.setVelocityY(0);
         }
-        console.log(this.curveSetter.y)
     }
 
     private getValidSpawnY = () => Math.random() * (this.scene.canvas.height - this.scene.getSkyHeight()) + this.scene.getSkyHeight();
