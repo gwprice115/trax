@@ -604,7 +604,7 @@ export default class SkiFreeScene extends Phaser.Scene {
         this.load.image(TREE, 'assets/tree.png');
         this.load.image(LITTLE_ROCK, 'assets/rock_little.png');
         this.load.image(BIG_ROCK, 'assets/rock_big.png');
-        this.load.spritesheet(SNOWFLAKES, 'http://labs.phaser.io/assets/sprites/snowflakes.png', { frameWidth: 17, frameHeight: 17 });
+        this.load.spritesheet(SNOWFLAKES, 'assets/snowflakes.png', { frameWidth: 17, frameHeight: 17 });
         this.load.spritesheet(DINOSAUR, 'assets/dinosaur.png', { frameWidth: 100, frameHeight: 100 });
         this.load.spritesheet(SKIER, 'assets/skier.png', { frameWidth: Player.WIDTH, frameHeight: Player.HEIGHT });
         this.load.spritesheet(WOLF, 'assets/running_wolf_sprite.png', { frameWidth: 563, frameHeight: 265 });
