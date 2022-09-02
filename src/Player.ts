@@ -3,7 +3,7 @@
  */
 import * as Phaser from "phaser";
 
-import type { SkiFreeScene } from "./scenes/Game";
+import type SkiFreeScene from "./scenes/Game";
 import { GameStates } from "./scenes/GameStates";
 
 const SKI_TRAIL = "ski-trail";

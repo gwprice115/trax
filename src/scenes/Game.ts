@@ -71,19 +71,7 @@ import try_again_hover from "./assets/try-again-hover.png";
 import try_again from "./assets/try-again.png";
 import { GameStates } from "./GameStates";
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const arcade_font_xml = require("./assets/arcade.xml");
-
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const wind = require("./assets/blizzard.wav");
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const click = require("./assets/click.wav");
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const ouch = require("./assets/ouch.m4a");
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const ski_audio = require("./assets/ski.m4a");
-
-export class SkiFreeScene extends Phaser.Scene {
+export default class SkiFreeScene extends Phaser.Scene {
     public canvas: { height: number; width: number } = { height: 0, width: 0 };
     public static username: string | undefined = "";
     private ticks: number = 0;
@@ -668,11 +656,11 @@ export class SkiFreeScene extends Phaser.Scene {
         this.load.image("end", end_asset);
         this.load.image("leaderboard_button", leaderboard_button_asset);
 
-        this.load.bitmapFont("arcadeFont", arcade_font_png, arcade_font_xml);
-        this.load.audio("wind", wind);
-        this.load.audio("click", click);
-        this.load.audio("ouch", ouch);
-        this.load.audio("ski", ski_audio);
+        this.load.bitmapFont("arcadeFont", "assets/arcade.png", "assets/arcade.xml");
+        this.load.audio("wind", "assets/blizzard.wav");
+        this.load.audio("click", "assets/click.wav");
+        this.load.audio("ouch", "assets/ouch.m4a");
+        this.load.audio("ski", "assets/ski.m4a");
     }
 
     public create() {
