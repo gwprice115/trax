@@ -14,10 +14,20 @@ jobs:
     name: CI
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: borales/actions-yarn@v3.0.0
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Install
+        uses: borales/actions-yarn@v3.0.0
         with:
           cmd: install # will run `yarn install` command
-      - uses: borales/actions-yarn@v3.0.0
+      - name: Build
+        uses: borales/actions-yarn@v3.0.0
         with:
-          cmd: deploy # will run `yarn deploy` command
+          cmd: build # will run `yarn install` command
+      - name: Deploy
+        uses: crazy-max/ghaction-github-pages@v1
+        with:
+          target_branch: gh-pages
+          build_dir: dist
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_REPO_TOKEN }}
