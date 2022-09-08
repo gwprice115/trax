@@ -19,4 +19,4 @@ server by running `yarn dev` and navigate to http://localhost:3000.
 
 ## Production
 
-After running `yarn build`, the files you need for production will be on the `dist` folder. To test code on your `dist` folder, run `yarn serve` and navigate to http://localhost:5000
+Running `yarn deploy` will build and deploy your local version of the repo to the github pages site
