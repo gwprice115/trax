@@ -9,7 +9,6 @@
     "serve": "vite preview",
     "predeploy": "yarn build",
     "deploy": "yarn gh-pages -d dist -r git@github.com:gwprice115/trax.git"
-    "sec": "npm github-app-installation-token"
   },
   "repository": {
     "type": "git",
