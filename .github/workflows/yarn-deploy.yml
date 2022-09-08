@@ -16,18 +16,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Install
-        uses: borales/actions-yarn@v3.0.0
-        with:
-          cmd: install # will run `yarn install` command
-      - name: Build
-        uses: borales/actions-yarn@v3.0.0
-        with:
-          cmd: build # will run `yarn install` command
-      - name: Deploy
-        uses: crazy-max/ghaction-github-pages@v1
-        with:
-          target_branch: gh-pages
-          build_dir: dist
+      - name: Build and deploy to GitHub Pages
+        uses: EdricChan03/action-build-deploy-ghpages@v2.6.0
         env:
-          GITHUB_PAT: ${{ secrets.REPO_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.REPO_TOKEN }}
