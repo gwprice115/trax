@@ -1,14 +1,6 @@
-based on <a href="https://github.com/geocine/phaser3-rollup-typescript.git">https://github.com/geocine/phaser3-rollup-typescript.git</a>
+See it in action <a href="https://github.com/gwprice115/trax">here</a>!
 
-<h1 align="center">
-  <br>
-  <a href="https://github.com/geocine/phaser3-rollup-typescript#readme"><img src="https://i.imgur.com/6lcIxDs.png" alt="header" width="600"/></a>
-  <br>
-  Phaser 3 TypeScript Starter
-  <br>
-</h1>
-
-This is a [Phaser 3](https://github.com/photonstorm/phaser) starter with [TypeScript](https://www.typescriptlang.org/), [Rollup](https://rollupjs.org) with ⚡️ lightning fast HMR through [Vite](https://vitejs.dev/).
+Used <a href="https://github.com/geocine/phaser3-rollup-typescript.git">this repo</a> as a starting point
 
 ## Available Commands
 
@@ -18,6 +10,7 @@ This is a [Phaser 3](https://github.com/photonstorm/phaser) starter with [TypeSc
 | `yarn dev` | Builds project and open web server, watching for changes |
 | `yarn build` | Builds code bundle with production settings  |
 | `yarn serve` | Run a web server to serve built code bundle |
+| `yarn deploy` | Deploy to the github pages site |
 
 ## Development
 
