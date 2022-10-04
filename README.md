@@ -1,4 +1,4 @@
-See it in action <a href="https://github.com/gwprice115/trax">here</a>!
+See it in action <a href="https://gwprice115.github.io/trax/">here</a>!
 
 Used <a href="https://github.com/geocine/phaser3-rollup-typescript.git">this repo</a> as a starting point
 
